@@ -185,6 +185,8 @@ private:
         //if (!roughnessPBR.empty()) std::cout << "has PBR roughness" << std::endl;
         textures.insert(textures.end(), roughnessPBR.begin(), roughnessPBR.end());
 
+        std::cout << "roughness count: " << (int)roughnessPBR.size() << std::endl;
+
         // aiTextureType_AMBIENT_OCCLUSION
         std::vector<Texture> aoPBR = loadMaterialTextures(material, aiTextureType_AMBIENT_OCCLUSION, "texture_PBR_ambient_occlusion");
         //if (!aoPBR.empty()) std::cout << "has PBR ao" << std::endl;
@@ -211,7 +213,7 @@ private:
             bool skip = false;
             for(unsigned int j = 0; j < textures_loaded.size(); j++)
             {
-                if(std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0)
+                if(std::strcmp(textures_loaded[j].path.data(), str.C_Str()) == 0 && typeName == textures_loaded[j].type)
                 {
                     textures.push_back(textures_loaded[j]);
                     skip = true; // a texture with the same filepath has already been loaded, continue to next one. (optimization)

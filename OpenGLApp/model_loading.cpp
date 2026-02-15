@@ -78,7 +78,8 @@ int main()
 
     // build and compile shaders
     // -------------------------
-    Shader ourShader("1.model_loading.vs", "1.model_loading.fs");
+    //Shader ourShader("1.model_loading.vs", "1.model_loading.fs");
+    Shader ourShader("1.2.pbr.vs", "1.2.pbr.fs");
     //Shader ourShader("1.2.pbr.vs", "1.2.pbr.fs");
 
     // load models
@@ -86,6 +87,18 @@ int main()
     //Model ourModel(FileSystem::getPath("resources/objects/mask/source/mask.fbx"));
     Model ourModel(FileSystem::getPath("resources/objects/wooden_chest/scene.gltf"));
 
+    glm::vec3 lightPositions[4] = {
+    glm::vec3(0.0f, 0.0f, 10.0f),
+    glm::vec3(0.0f, 0.0f, 10.0f),
+    glm::vec3(0.0f, 0.0f, 10.0f),
+    glm::vec3(0.0f, 0.0f, 10.0f),
+    };
+    glm::vec3 lightColors[4] = {
+        glm::vec3(150.0f, 150.0f, 150.0f),
+        glm::vec3(150.0f, 150.0f, 150.0f),
+        glm::vec3(150.0f, 150.0f, 150.0f),
+        glm::vec3(150.0f, 150.0f, 150.0f),
+    };
 
     // draw in wireframe
     //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -111,6 +124,18 @@ int main()
 
         // don't forget to enable shader before setting uniforms
         ourShader.use();
+
+        //lighting
+        //for (unsigned int i = 0; i < sizeof(lightPositions) / sizeof(lightPositions[0]); ++i)
+        for (unsigned int i = 0; i < 4; ++i)
+        {
+            glm::vec3 newPos = lightPositions[i] + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);
+            newPos = lightPositions[i];
+            ourShader.setVec3("lightPositions[" + std::to_string(i) + "]", newPos);
+            ourShader.setVec3("lightColors[" + std::to_string(i) + "]", lightColors[i]);
+
+            //std::cout << i << std::endl;
+        }
 
         // view/projection transformations
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);

@@ -11,6 +11,6 @@ uniform sampler2D texture_PBR_ambient_occlusion;
 
 void main()
 {    
-    FragColor = texture(texture_PBR_normal, TexCoords);
+    FragColor = texture(texture_PBR_roughness, TexCoords);
     //FragColor = vec4(1.0);
 }

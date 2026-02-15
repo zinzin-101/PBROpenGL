@@ -79,14 +79,14 @@ public:
             if(name == "texture_diffuse")
             {
                 number = std::to_string(diffuseNr++);
-                std::cout << "rendering diffuse" << std::endl;
+                //std::cout << "rendering diffuse" << std::endl;
             }
             else if(name == "texture_specular")
                 number = std::to_string(specularNr++); // transfer unsigned int to string
             else if(name == "texture_normal")
             {
                 number = std::to_string(normalNr++); // transfer unsigned int to string
-                std::cout << "rendering normal" << std::endl;
+                //std::cout << "rendering normal" << std::endl;
             }
             else if(name == "texture_height")
                 number = std::to_string(heightNr++); // transfer unsigned int to string
@@ -94,22 +94,22 @@ public:
             else if(name == "texture_PBR_diffuse")
             {
                 number = std::to_string(diffuseNrPBR++);
-                std::cout << "rendering pbr diffuse" << std::endl;
+                //std::cout << "rendering pbr diffuse" << std::endl;
             }
             else if (name == "texture_PBR_normal")
             {
                 number = std::to_string(normalNrPBR++);
-                std::cout << "rendering pbr normal" << std::endl;
+                //std::cout << "rendering pbr normal" << std::endl;
             }
             else if (name == "texture_PBR_metallic")
             {
                 number = std::to_string(metallicNrPBR++);
-                std::cout << "rendering pbr metal" << std::endl;
+                //std::cout << "rendering pbr metal" << std::endl;
             }
             else if (name == "texture_PBR_roughness")
             {
                 number = std::to_string(roughnessNrPBR++);
-                std::cout << "rendering pbr roughness" << std::endl;
+                //std::cout << "rendering pbr roughness" << std::endl;
             }
             else if (name == "texture_PBR_ambient_occlusion")
                 number = std::to_string(aoNrPBR++);
