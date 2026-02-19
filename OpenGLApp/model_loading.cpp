@@ -88,8 +88,8 @@ int main()
     Model ourModel(FileSystem::getPath("resources/objects/wooden_chest/scene.gltf"));
 
     glm::vec3 lightPositions[4] = {
-    glm::vec3(0.0f, 0.0f, 10.0f),
-    glm::vec3(0.0f, 0.0f, 10.0f),
+    glm::vec3(0.0f, 0.0f, 2.0f),
+    glm::vec3(0.0f, 0.0f, -10.0f),
     glm::vec3(0.0f, 0.0f, 10.0f),
     glm::vec3(0.0f, 0.0f, 10.0f),
     };
@@ -127,7 +127,7 @@ int main()
 
         //lighting
         //for (unsigned int i = 0; i < sizeof(lightPositions) / sizeof(lightPositions[0]); ++i)
-        for (unsigned int i = 0; i < 4; ++i)
+        for (unsigned int i = 0; i < 2; ++i)
         {
             glm::vec3 newPos = lightPositions[i] + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);
             newPos = lightPositions[i];
@@ -143,12 +143,17 @@ int main()
         ourShader.setMat4("projection", projection);
         ourShader.setMat4("view", view);
 
+        ourShader.setVec3("camPos", camera.Position);
+
         // render the loaded model
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(1.0f));	// it's a bit too big for our scene, so scale it down
         model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
         ourShader.setMat4("model", model);
+
+        ourShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+
         ourModel.Draw(ourShader);
 
 

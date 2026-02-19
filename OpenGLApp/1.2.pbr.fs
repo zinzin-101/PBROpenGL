@@ -12,8 +12,9 @@ uniform sampler2D texture_PBR_roughness;
 uniform sampler2D texture_PBR_ambient_occlusion;
 
 // lights
-uniform vec3 lightPositions[4];
-uniform vec3 lightColors[4];
+#define NUM_OF_LIGHT 2
+uniform vec3 lightPositions[NUM_OF_LIGHT];
+uniform vec3 lightColors[NUM_OF_LIGHT];
 
 uniform vec3 camPos;
 
@@ -97,13 +98,14 @@ void main()
 
     // reflectance equation
     vec3 Lo = vec3(0.0);
-    for(int i = 0; i < 4; ++i) 
+    for(int i = 0; i < NUM_OF_LIGHT; ++i) 
     {
         // calculate per-light radiance
         vec3 L = normalize(lightPositions[i] - WorldPos);
         vec3 H = normalize(V + L);
         float distance = length(lightPositions[i] - WorldPos);
         float attenuation = 1.0 / (distance * distance);
+        //float attenuation = 1.0;
         vec3 radiance = lightColors[i] * attenuation;
 
         // Cook-Torrance BRDF
