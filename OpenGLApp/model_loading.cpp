@@ -85,12 +85,13 @@ int main()
     // load models
     // -----------
     //Model ourModel(FileSystem::getPath("resources/objects/mask/source/mask.fbx"));
-    Model ourModel(FileSystem::getPath("resources/objects/wooden_chest/scene.gltf"));
+    //Model ourModel(FileSystem::getPath("resources/objects/wooden_chest/scene.gltf"));
+    Model ourModel(FileSystem::getPath("resources/objects/wheel/wheel.fbx"));
 
     glm::vec3 lightPositions[4] = {
     glm::vec3(0.0f, 0.0f, 2.0f),
     glm::vec3(0.0f, 0.0f, -10.0f),
-    glm::vec3(0.0f, 0.0f, 10.0f),
+    glm::vec3(2.0f, 0.0f, 10.0f),
     glm::vec3(0.0f, 0.0f, 10.0f),
     };
     glm::vec3 lightColors[4] = {
@@ -127,7 +128,7 @@ int main()
 
         //lighting
         //for (unsigned int i = 0; i < sizeof(lightPositions) / sizeof(lightPositions[0]); ++i)
-        for (unsigned int i = 0; i < 2; ++i)
+        for (unsigned int i = 0; i < 3; ++i)
         {
             glm::vec3 newPos = lightPositions[i] + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);
             newPos = lightPositions[i];

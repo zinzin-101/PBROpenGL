@@ -12,7 +12,7 @@ uniform sampler2D texture_PBR_roughness;
 uniform sampler2D texture_PBR_ambient_occlusion;
 
 // lights
-#define NUM_OF_LIGHT 2
+#define NUM_OF_LIGHT 3
 uniform vec3 lightPositions[NUM_OF_LIGHT];
 uniform vec3 lightColors[NUM_OF_LIGHT];
 
