@@ -37,6 +37,9 @@ bool firstMouse = true;
 float deltaTime = 0.0f;	
 float lastFrame = 0.0f;
 
+// background rotation
+float backgroundRotateAngle = 0.0f;
+
 int main()
 {
     // glfw: initialize and configure
@@ -413,12 +416,15 @@ int main()
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
 
+        glm::mat4 envRotMat = glm::rotate(glm::mat4(1.0f), glm::radians(-backgroundRotateAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
         model = glm::scale(model, glm::vec3(1.0f));	// it's a bit too big for our scene, so scale it down
         model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
         pbrShader.setMat4("model", model);
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+        pbrShader.setMat4("envMapRotation", envRotMat);
         chestModel.Draw(pbrShader);
 
         //// rusted iron
@@ -439,23 +445,23 @@ int main()
         //pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
         //renderSphere();
 
-        //// gold
-        //glActiveTexture(GL_TEXTURE3);
-        //glBindTexture(GL_TEXTURE_2D, goldAlbedoMap);
-        //glActiveTexture(GL_TEXTURE4);
-        //glBindTexture(GL_TEXTURE_2D, goldNormalMap);
-        //glActiveTexture(GL_TEXTURE5);
-        //glBindTexture(GL_TEXTURE_2D, goldMetallicMap);
-        //glActiveTexture(GL_TEXTURE6);
-        //glBindTexture(GL_TEXTURE_2D, goldRoughnessMap);
-        //glActiveTexture(GL_TEXTURE7);
-        //glBindTexture(GL_TEXTURE_2D, goldAOMap);
+        // gold
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, goldAlbedoMap);
+        glActiveTexture(GL_TEXTURE4);
+        glBindTexture(GL_TEXTURE_2D, goldNormalMap);
+        glActiveTexture(GL_TEXTURE5);
+        glBindTexture(GL_TEXTURE_2D, goldMetallicMap);
+        glActiveTexture(GL_TEXTURE6);
+        glBindTexture(GL_TEXTURE_2D, goldRoughnessMap);
+        glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, goldAOMap);
 
-        //model = glm::mat4(1.0f);
-        //model = glm::translate(model, glm::vec3(-3.0, 0.0, 2.0));
-        //pbrShader.setMat4("model", model);
-        //pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-        //renderSphere();
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(-3.0, 0.0, 2.0));
+        pbrShader.setMat4("model", model);
+        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+        renderSphere();
 
         //// grass
         //glActiveTexture(GL_TEXTURE3);
@@ -537,6 +543,11 @@ int main()
         glBindTexture(GL_TEXTURE_CUBE_MAP, envCubemap);
         //glBindTexture(GL_TEXTURE_CUBE_MAP, irradianceMap); // display irradiance map
         //glBindTexture(GL_TEXTURE_CUBE_MAP, prefilterMap); // display prefilter map
+
+        model = glm::mat4(1.0f);
+        model = glm::rotate(model, glm::radians(backgroundRotateAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+        backgroundShader.setMat4("model", model);
+
         renderCube();
 
         // render BRDF map to screen
@@ -575,6 +586,15 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(UP, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         camera.ProcessKeyboard(DOWN, deltaTime);
+
+    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
+        backgroundRotateAngle += 30.0f * deltaTime;
+        std::cout << "env rotation angle: " << backgroundRotateAngle << std::endl;
+    }
+    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
+        backgroundRotateAngle -= 30.0f * deltaTime;
+        std::cout << "env rotation angle: " << backgroundRotateAngle << std::endl;
+    }
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes

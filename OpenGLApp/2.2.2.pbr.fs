@@ -15,6 +15,7 @@ uniform sampler2D aoMap;
 uniform samplerCube irradianceMap;
 uniform samplerCube prefilterMap;
 uniform sampler2D brdfLUT;
+uniform mat4 envMapRotation;
 
 // lights
 uniform vec3 lightPositions[4];
@@ -100,7 +101,11 @@ void main()
        
     // input lighting data
     vec3 N = getNormalFromMap();
+    vec4 temp = envMapRotation * vec4(N, 1.0);
+    N = normalize(temp.xyz);
     vec3 V = normalize(camPos - WorldPos);
+    temp = envMapRotation * vec4(V, 1.0);
+    V = normalize(temp.xyz);
     vec3 R = reflect(-V, N); 
 
     // calculate reflectance at normal incidence; if dia-electric (like plastic) use F0 
