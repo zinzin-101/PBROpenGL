@@ -187,14 +187,14 @@ private:
         //if (!roughnessPBR.empty()) std::cout << "has PBR roughness" << std::endl;
         textures.insert(textures.end(), roughnessPBR.begin(), roughnessPBR.end());
 
-        std::cout << "roughness count: " << (int)roughnessPBR.size() << std::endl;
+        //std::cout << "roughness count: " << (int)roughnessPBR.size() << std::endl;
 
         // aiTextureType_AMBIENT_OCCLUSION
         std::vector<Texture> aoPBR = loadMaterialTextures(material, aiTextureType_AMBIENT_OCCLUSION, "texture_PBR_ambient_occlusion");
         //if (!aoPBR.empty()) std::cout << "has PBR ao" << std::endl;
         textures.insert(textures.end(), aoPBR.begin(), aoPBR.end());
 
-        std::cout << "num texture " << (int)textures.size() << std::endl;
+        //std::cout << "num texture " << (int)textures.size() << std::endl;
 
         // return a mesh object created from the extracted mesh data
         return PBRMesh(vertices, indices, textures);
