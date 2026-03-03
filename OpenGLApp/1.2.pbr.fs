@@ -5,11 +5,11 @@ in vec3 WorldPos;
 in vec3 Normal;
 
 // material parameters
-uniform sampler2D texture_PBR_diffuse;
-uniform sampler2D texture_PBR_normal;
-uniform sampler2D texture_PBR_metallic;
-uniform sampler2D texture_PBR_roughness;
-uniform sampler2D texture_PBR_ambient_occlusion;
+uniform sampler2D texture_PBR_diffuse1;
+uniform sampler2D texture_PBR_normal1;
+uniform sampler2D texture_PBR_metallic1;
+uniform sampler2D texture_PBR_roughness1;
+uniform sampler2D texture_PBR_ambient_occlusion1;
 
 // lights
 #define NUM_OF_LIGHT 3
@@ -26,7 +26,7 @@ const float PI = 3.14159265359;
 // technique somewhere later in the normal mapping tutorial.
 vec3 getNormalFromMap()
 {
-    vec3 tangentNormal = texture(texture_PBR_normal, TexCoords).xyz * 2.0 - 1.0;
+    vec3 tangentNormal = texture(texture_PBR_normal1, TexCoords).xyz * 2.0 - 1.0;
 
     vec3 Q1  = dFdx(WorldPos);
     vec3 Q2  = dFdy(WorldPos);
@@ -83,10 +83,10 @@ vec3 fresnelSchlick(float cosTheta, vec3 F0)
 // ----------------------------------------------------------------------------
 void main()
 {		
-    vec3 albedo     = pow(texture(texture_PBR_diffuse, TexCoords).rgb, vec3(2.2));
-    float metallic  = texture(texture_PBR_metallic, TexCoords).r;
-    float roughness = texture(texture_PBR_roughness, TexCoords).r;
-    float ao        = texture(texture_PBR_ambient_occlusion, TexCoords).r;
+    vec3 albedo     = pow(texture(texture_PBR_diffuse1, TexCoords).rgb, vec3(2.2));
+    float metallic  = texture(texture_PBR_metallic1, TexCoords).r;
+    float roughness = texture(texture_PBR_roughness1, TexCoords).r;
+    float ao        = texture(texture_PBR_ambient_occlusion1, TexCoords).r;
 
     vec3 N = getNormalFromMap();
     vec3 V = normalize(camPos - WorldPos);
