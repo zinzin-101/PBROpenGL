@@ -138,7 +138,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="glad.c" />
-    <ClCompile Include="model_loading.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -146,6 +146,20 @@
     <None Include="1.2.pbr.vs" />
     <None Include="1.model_loading.fs" />
     <None Include="1.model_loading.vs" />
+    <None Include="2.2.2.background.fs" />
+    <None Include="2.2.2.background.vs" />
+    <None Include="2.2.2.brdf.fs" />
+    <None Include="2.2.2.brdf.vs" />
+    <None Include="2.2.2.cubemap.vs" />
+    <None Include="2.2.2.equirectangular_to_cubemap.fs" />
+    <None Include="2.2.2.irradiance_convolution.fs" />
+    <None Include="2.2.2.pbr.fs" />
+    <None Include="2.2.2.pbr.vs" />
+    <None Include="2.2.2.prefilter.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="PBRMesh.h" />
+    <ClInclude Include="PBRModel.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

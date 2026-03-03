@@ -18,10 +18,10 @@
     <ClCompile Include="glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="model_loading.cpp">
+    <ClCompile Include="stb_image.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="stb_image.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -30,5 +30,23 @@
     <None Include="1.model_loading.vs" />
     <None Include="1.2.pbr.fs" />
     <None Include="1.2.pbr.vs" />
+    <None Include="2.2.2.background.fs" />
+    <None Include="2.2.2.background.vs" />
+    <None Include="2.2.2.brdf.fs" />
+    <None Include="2.2.2.brdf.vs" />
+    <None Include="2.2.2.cubemap.vs" />
+    <None Include="2.2.2.equirectangular_to_cubemap.fs" />
+    <None Include="2.2.2.irradiance_convolution.fs" />
+    <None Include="2.2.2.pbr.vs" />
+    <None Include="2.2.2.prefilter.fs" />
+    <None Include="2.2.2.pbr.fs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="PBRModel.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PBRMesh.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
