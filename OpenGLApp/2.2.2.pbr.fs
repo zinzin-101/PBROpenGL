@@ -119,6 +119,8 @@ void main()
     {
         // calculate per-light radiance
         vec3 L = normalize(lightPositions[i] - WorldPos);
+        vec4 tempL = envMapRotation * vec4(L, 1.0);
+        L = normalize(tempL.xyz);
         vec3 H = normalize(V + L);
         float distance = length(lightPositions[i] - WorldPos);
         float attenuation = 1.0 / (distance * distance);
