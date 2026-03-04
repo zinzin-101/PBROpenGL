@@ -18,8 +18,9 @@ uniform sampler2D brdfLUT;
 uniform mat4 envMapRotation;
 
 // lights
-uniform vec3 lightPositions[4];
-uniform vec3 lightColors[4];
+#define NUM_OF_LIGHTS 1
+uniform vec3 lightPositions[NUM_OF_LIGHTS];
+uniform vec3 lightColors[NUM_OF_LIGHTS];
 
 uniform vec3 camPos;
 

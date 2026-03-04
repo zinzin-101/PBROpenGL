@@ -14,9 +14,10 @@
 
 #include <iostream>
 
-void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void mouse_callback(GLFWwindow* window, double xpos, double ypos);
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+void framebufferSizeCallback(GLFWwindow* window, int width, int height);
+void mouseCallback(GLFWwindow* window, double xpos, double ypos);
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
+void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
 unsigned int loadTexture(const char *path);
 void renderSphere();
@@ -39,6 +40,8 @@ float lastFrame = 0.0f;
 
 // background rotation
 float backgroundRotateAngle = 0.0f;
+unsigned int canRotatebackgroundFlag = 0; // can rotate if first 2 bits are 1 | first bit = left alt, second bit = left click
+float rotateSensitivity = 15.0f; // in degrees
 
 int main()
 {
@@ -64,9 +67,10 @@ int main()
         glfwTerminate();
         return -1;
     }
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
-    glfwSetCursorPosCallback(window, mouse_callback);
-    glfwSetScrollCallback(window, scroll_callback);
+    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+    glfwSetCursorPosCallback(window, mouseCallback);
+    glfwSetMouseButtonCallback(window, mouseButtonCallback);
+    glfwSetScrollCallback(window, scrollCallback);
 
     // tell GLFW to capture our mouse
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -148,6 +152,7 @@ int main()
 
     // lights
     // ------
+    const int numOfLights = 1;
     glm::vec3 lightPositions[] = {
         glm::vec3(-10.0f,  10.0f, 10.0f),
         glm::vec3( 10.0f,  10.0f, 10.0f),
@@ -155,10 +160,10 @@ int main()
         glm::vec3( 10.0f, -10.0f, 10.0f),
     };
     glm::vec3 lightColors[] = {
-        glm::vec3(300.0f, 300.0f, 300.0f),
-        glm::vec3(300.0f, 300.0f, 300.0f),
-        glm::vec3(300.0f, 300.0f, 300.0f),
-        glm::vec3(300.0f, 300.0f, 300.0f)
+        glm::vec3(1000.0f, 1000.0f, 1000.0f),
+        glm::vec3(1000.0f, 1000.0f, 1000.0f),
+        glm::vec3(1000.0f, 1000.0f, 1000.0f),
+        glm::vec3(1000.0f, 1000.0f, 1000.0f)
     };
 
     // pbr: setup framebuffer
@@ -385,6 +390,7 @@ int main()
     // -----------
     while (!glfwWindowShouldClose(window))
     {
+
         // per-frame time logic
         // --------------------
         float currentFrame = static_cast<float>(glfwGetTime());
@@ -520,10 +526,11 @@ int main()
         // render light source (simply re-render sphere at light positions)
         // this looks a bit off as we use the same shader, but it'll make their positions obvious and 
         // keeps the codeprint small.
-        for (unsigned int i = 0; i < sizeof(lightPositions) / sizeof(lightPositions[0]); ++i)
+        for (unsigned int i = 0; i < numOfLights; ++i)
         {
-            glm::vec3 newPos = lightPositions[i] + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);
-            newPos = lightPositions[i];
+            //glm::vec3 newPos = lightPositions[i] + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);
+            glm::vec3 newPos = glm::vec3(envRotMat * glm::vec4(lightPositions[i], 1.0f));
+            //newPos = lightPositions[i];
             pbrShader.setVec3("lightPositions[" + std::to_string(i) + "]", newPos);
             pbrShader.setVec3("lightColors[" + std::to_string(i) + "]", lightColors[i]);
 
@@ -532,7 +539,7 @@ int main()
             model = glm::scale(model, glm::vec3(0.5f));
             pbrShader.setMat4("model", model);
             pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-            renderSphere();
+            //renderSphere();
         }
 
         // render skybox (render as last to prevent overdraw)
@@ -587,19 +594,27 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         camera.ProcessKeyboard(DOWN, deltaTime);
 
-    if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
-        backgroundRotateAngle += 30.0f * deltaTime;
-        std::cout << "env rotation angle: " << backgroundRotateAngle << std::endl;
+    unsigned int leftAltDownStatus = glfwGetKey(window, GLFW_KEY_LEFT_ALT);
+    if (leftAltDownStatus == GLFW_PRESS) {
+        canRotatebackgroundFlag |= 1; // first bit 01
     }
-    if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
-        backgroundRotateAngle -= 30.0f * deltaTime;
-        std::cout << "env rotation angle: " << backgroundRotateAngle << std::endl;
+    else {
+        canRotatebackgroundFlag &= ~1;
     }
+
+    //if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
+    //    backgroundRotateAngle += 30.0f * deltaTime;
+    //    std::cout << "env rotation angle: " << backgroundRotateAngle << std::endl;
+    //}
+    //if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS) {
+    //    backgroundRotateAngle -= 30.0f * deltaTime;
+    //    std::cout << "env rotation angle: " << backgroundRotateAngle << std::endl;
+    //}
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
 // ---------------------------------------------------------------------------------------------
-void framebuffer_size_callback(GLFWwindow* window, int width, int height)
+void framebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
     // make sure the viewport matches the new window dimensions; note that width and 
     // height will be significantly larger than specified on retina displays.
@@ -609,7 +624,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
 
 // glfw: whenever the mouse moves, this callback is called
 // -------------------------------------------------------
-void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
+void mouseCallback(GLFWwindow* window, double xposIn, double yposIn)
 {
     float xpos = static_cast<float>(xposIn);
     float ypos = static_cast<float>(yposIn);
@@ -627,12 +642,28 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
     lastX = xpos;
     lastY = ypos;
 
-    camera.ProcessMouseMovement(xoffset, yoffset);
+    bool isRotatingEnvMap = canRotatebackgroundFlag == 3; // first 2 bits are 1: 11
+
+    if (isRotatingEnvMap) {
+        backgroundRotateAngle += xoffset * rotateSensitivity * deltaTime;
+    }
+    else {
+        camera.ProcessMouseMovement(xoffset, yoffset);
+    }
+}
+
+void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods) {
+    if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) {
+        canRotatebackgroundFlag |= 2; // second bit 10
+    }
+    else {
+        canRotatebackgroundFlag &= ~2;
+    }
 }
 
 // glfw: whenever the mouse scroll wheel scrolls, this callback is called
 // ----------------------------------------------------------------------
-void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+void scrollCallback(GLFWwindow* window, double xoffset, double yoffset)
 {
     camera.ProcessMouseScroll(static_cast<float>(yoffset));
 }
