@@ -6,11 +6,11 @@ in vec3 Normal;
 in vec4 FragPosLightSpace;
 
 // material parameters
-uniform sampler2D albedoMap;
-uniform sampler2D normalMap;
-uniform sampler2D metallicMap;
-uniform sampler2D roughnessMap;
-uniform sampler2D aoMap;
+uniform sampler2D albedoMap1;
+uniform sampler2D normalMap1;
+uniform sampler2D metallicMap1;
+uniform sampler2D roughnessMap1;
+uniform sampler2D aoMap1;
 
 // IBL
 uniform samplerCube irradianceMap;
@@ -36,7 +36,7 @@ const float PI = 3.14159265359;
 // technique somewhere later in the normal mapping tutorial.
 vec3 getNormalFromMap()
 {
-    vec3 tangentNormal = texture(normalMap, TexCoords).xyz * 2.0 - 1.0;
+    vec3 tangentNormal = texture(normalMap1, TexCoords).xyz * 2.0 - 1.0;
 
     vec3 Q1  = dFdx(WorldPos);
     vec3 Q2  = dFdy(WorldPos);
@@ -138,10 +138,10 @@ float ShadowCalculation(vec4 fragPosLightSpace)
 void main()
 {		
     // material properties
-    vec3 albedo = pow(texture(albedoMap, TexCoords).rgb, vec3(2.2));
-    float metallic = texture(metallicMap, TexCoords).r;
-    float roughness = texture(roughnessMap, TexCoords).r;
-    float ao = texture(aoMap, TexCoords).r;
+    vec3 albedo = pow(texture(albedoMap1, TexCoords).rgb, vec3(2.2));
+    float metallic = texture(metallicMap1, TexCoords).r;
+    float roughness = texture(roughnessMap1, TexCoords).r;
+    float ao = texture(aoMap1, TexCoords).r;
        
     // input lighting data
     vec3 N = getNormalFromMap();
@@ -193,7 +193,7 @@ void main()
         // scale light by NdotL
         float NdotL = max(dot(N, L), 0.0);        
 
-        float shadow = ShadowCalculation(FragPosLightSpace);
+        float shadow = 1.0 - ShadowCalculation(FragPosLightSpace);
 
         // add to outgoing radiance Lo
         Lo += (kD * albedo / PI + specular) * radiance * NdotL * shadow; // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again

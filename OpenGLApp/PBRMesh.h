@@ -47,6 +47,8 @@ public:
     vector<Texture>      textures;
     unsigned int VAO;
 
+    static int maxTextureNumber; // for debug purposes
+
     // constructor
     PBRMesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures)
     {
@@ -74,7 +76,7 @@ public:
         unsigned int aoNrPBR = 1;
         for (unsigned int i = 0; i < textures.size(); i++)
         {
-            glActiveTexture(GL_TEXTURE3 + i); // start at texture 3 since 0-2 are used for IBL data
+            glActiveTexture(GL_TEXTURE4 + i); // start at texture 4 since 0-2 are used for IBL data and 3 for shadow map
             // retrieve texture number (the N in diffuse_textureN)
             string number;
             string name = textures[i].type;
@@ -120,6 +122,8 @@ public:
             glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
             // and finally bind the texture
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
+
+            //maxTextureNumber = std::max(maxTextureNumber, std::stoi(number));
         }
 
         // draw mesh

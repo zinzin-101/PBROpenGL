@@ -33,6 +33,8 @@ Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
 float lastX = 800.0f / 2.0;
 float lastY = 600.0 / 2.0;
 bool firstMouse = true;
+float normalMoveSpeed = 2.5f;
+float fastMoveSpeed = 10.0f;
 
 // timing
 float deltaTime = 0.0f;	
@@ -80,7 +82,8 @@ unsigned int wallMetallicMap;
 unsigned int wallRoughnessMap;
 unsigned int wallAOMap;
 
-void renderSceneDepth(Shader& shader, PBRModel& pbrModel);
+void renderSceneDepth(Shader& shader, PBRModel& pbrModel, glm::vec3 oldLightPos);
+int PBRMesh::maxTextureNumber = 0;
 
 int main()
 {
@@ -146,16 +149,16 @@ int main()
     pbrShader.setInt("irradianceMap", 0);
     pbrShader.setInt("prefilterMap", 1);
     pbrShader.setInt("brdfLUT", 2);
-    pbrShader.setInt("albedoMap", 3);
-    pbrShader.setInt("normalMap", 4);
-    pbrShader.setInt("metallicMap", 5);
-    pbrShader.setInt("roughnessMap", 6);
-    pbrShader.setInt("aoMap", 7);
+    pbrShader.setInt("albedoMap1", 4);
+    pbrShader.setInt("normalMap1", 5);
+    pbrShader.setInt("metallicMap1", 6);
+    pbrShader.setInt("roughnessMap1", 7);
+    pbrShader.setInt("aoMap1", 8);
     
     // shadow map shader
-    pbrShader.setInt("shadowMap", 8);
+    pbrShader.setInt("shadowMap", 3);
     debugDepthQuad.use();
-    debugDepthQuad.setInt("depthMap", 8);
+    debugDepthQuad.setInt("depthMap", 3);
 
     backgroundShader.use();
     backgroundShader.setInt("environmentMap", 0);
@@ -201,17 +204,17 @@ int main()
     // ------
     const int numOfLights = 1;
     glm::vec3 lightPositions[] = {
-        glm::vec3(-10.0f,  10.0f, 10.0f),
+        glm::vec3(-10.0f,  10.0f, 10.0f), // the first one is used for directional light
         //glm::vec3(0.0f,  10.0f, 0.0f),
         glm::vec3( 10.0f,  10.0f, 10.0f),
         glm::vec3(-10.0f, -10.0f, 10.0f),
         glm::vec3( 10.0f, -10.0f, 10.0f),
     };
     glm::vec3 lightColors[] = {
-        glm::vec3(1000.0f, 1000.0f, 1000.0f),
-        glm::vec3(1000.0f, 1000.0f, 1000.0f),
-        glm::vec3(1000.0f, 1000.0f, 1000.0f),
-        glm::vec3(1000.0f, 1000.0f, 1000.0f)
+        glm::vec3(500.0f, 500.0f, 500.0f),
+        glm::vec3(500.0f, 500.0f, 500.0f),
+        glm::vec3(500.0f, 500.0f, 500.0f),
+        glm::vec3(500.0f, 500.0f, 500.0f)
     };
 
     // pbr: setup framebuffer
@@ -231,9 +234,11 @@ int main()
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrComponents;
     //float *data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/newport_loft.hdr").c_str(), &width, &height, &nrComponents, 0);
-    float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/morning_2k.hdr").c_str(), &width, &height, &nrComponents, 0);
+    //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/morning_2k.hdr").c_str(), &width, &height, &nrComponents, 0);
     //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/puresky_2k.hdr").c_str(), &width, &height, &nrComponents, 0);
-    //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/studio.hdr").c_str(), &width, &height, &nrComponents, 0);
+    float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/studio.hdr").c_str(), &width, &height, &nrComponents, 0);
+    // float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/pisztyk.hdr").c_str(), &width, &height, &nrComponents, 0);
+    //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/kloppenheim_puresky.hdr").c_str(), &width, &height, &nrComponents, 0);
 
     unsigned int hdrTexture;
     if (data)
@@ -460,7 +465,8 @@ int main()
     glViewport(0, 0, scrWidth, scrHeight);
 
     stbi_set_flip_vertically_on_load(false); // for loading model texture
-    PBRModel chestModel(FileSystem::getPath("resources/objects/wooden_chest/scene.gltf"));
+    //PBRModel currentModel(FileSystem::getPath("resources/objects/wooden_chest/scene.gltf"));
+    PBRModel currentModel(FileSystem::getPath("resources/objects/chisa/scene.gltf"));
 
     // render loop
     // -----------
@@ -511,7 +517,7 @@ int main()
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
-        renderSceneDepth(depthShader, chestModel);
+        renderSceneDepth(depthShader, currentModel, lightPositions[0]);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         // reset viewport
         glViewport(0, 0, scrWidth, scrHeight);
@@ -534,7 +540,7 @@ int main()
         glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
 
         // bind shadow map
-        glActiveTexture(GL_TEXTURE8);
+        glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, depthMap);
         
         pbrShader.setMat4("envMapRotation", envRotMat);
@@ -542,123 +548,54 @@ int main()
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(1.0f));	
+        model = glm::scale(model, glm::vec3(0.01f));	
         model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
         pbrShader.setMat4("model", model);
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-        chestModel.Draw(pbrShader);
+        currentModel.Draw(pbrShader);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(1.0f));
+        model = glm::scale(model, glm::vec3(0.01f));
         model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0, 1, 0));
         model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
         pbrShader.setMat4("model", model);
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-        chestModel.Draw(pbrShader);
-
-        //// rusted iron
-        //glActiveTexture(GL_TEXTURE3);
-        //glBindTexture(GL_TEXTURE_2D, ironAlbedoMap);
-        //glActiveTexture(GL_TEXTURE4);
-        //glBindTexture(GL_TEXTURE_2D, ironNormalMap);
-        //glActiveTexture(GL_TEXTURE5);
-        //glBindTexture(GL_TEXTURE_2D, ironMetallicMap);
-        //glActiveTexture(GL_TEXTURE6);
-        //glBindTexture(GL_TEXTURE_2D, ironRoughnessMap);
-        //glActiveTexture(GL_TEXTURE7);
-        //glBindTexture(GL_TEXTURE_2D, ironAOMap);
-
-        //model = glm::mat4(1.0f);
-        //model = glm::translate(model, glm::vec3(-5.0, 0.0, 2.0));
-        //pbrShader.setMat4("model", model);
-        //pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-        //renderSphere();
+        currentModel.Draw(pbrShader);
 
         // gold
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, goldAlbedoMap);
         glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, goldNormalMap);
+        glBindTexture(GL_TEXTURE_2D, goldAlbedoMap);
         glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, goldMetallicMap);
+        glBindTexture(GL_TEXTURE_2D, goldNormalMap);
         glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, goldRoughnessMap);
+        glBindTexture(GL_TEXTURE_2D, goldMetallicMap);
         glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, goldRoughnessMap);
+        glActiveTexture(GL_TEXTURE8);
         glBindTexture(GL_TEXTURE_2D, goldAOMap);
 
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(-3.0, 0.0, 2.0));
+        //model = glm::translate(model, glm::vec3(-3.0, 0.0, 2.0));
+        glm::vec3 pos = lightPositions[0] * 0.5f;
+        model = glm::translate(model, pos);
+        model = glm::scale(model, glm::vec3(2.5f));
         pbrShader.setMat4("model", model);
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
         renderSphere();
 
-        //// grass
-        //glActiveTexture(GL_TEXTURE3);
-        //glBindTexture(GL_TEXTURE_2D, grassAlbedoMap);
-        //glActiveTexture(GL_TEXTURE4);
-        //glBindTexture(GL_TEXTURE_2D, grassNormalMap);
-        //glActiveTexture(GL_TEXTURE5);
-        //glBindTexture(GL_TEXTURE_2D, grassMetallicMap);
-        //glActiveTexture(GL_TEXTURE6);
-        //glBindTexture(GL_TEXTURE_2D, grassRoughnessMap);
-        //glActiveTexture(GL_TEXTURE7);
-        //glBindTexture(GL_TEXTURE_2D, grassAOMap);
-
-        //model = glm::mat4(1.0f);
-        //model = glm::translate(model, glm::vec3(-1.0, 0.0, 2.0));
-        //pbrShader.setMat4("model", model);
-        //pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-        //renderSphere();
-
-        //// plastic
-        //glActiveTexture(GL_TEXTURE3);
-        //glBindTexture(GL_TEXTURE_2D, plasticAlbedoMap);
-        //glActiveTexture(GL_TEXTURE4);
-        //glBindTexture(GL_TEXTURE_2D, plasticNormalMap);
-        //glActiveTexture(GL_TEXTURE5);
-        //glBindTexture(GL_TEXTURE_2D, plasticMetallicMap);
-        //glActiveTexture(GL_TEXTURE6);
-        //glBindTexture(GL_TEXTURE_2D, plasticRoughnessMap);
-        //glActiveTexture(GL_TEXTURE7);
-        //glBindTexture(GL_TEXTURE_2D, plasticAOMap);
-
-        //model = glm::mat4(1.0f);
-        //model = glm::translate(model, glm::vec3(1.0, 0.0, 2.0));
-        //pbrShader.setMat4("model", model);
-        //pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-        //renderSphere();
-
-        //// wall
-        //glActiveTexture(GL_TEXTURE3);
-        //glBindTexture(GL_TEXTURE_2D, wallAlbedoMap);
-        //glActiveTexture(GL_TEXTURE4);
-        //glBindTexture(GL_TEXTURE_2D, wallNormalMap);
-        //glActiveTexture(GL_TEXTURE5);
-        //glBindTexture(GL_TEXTURE_2D, wallMetallicMap);
-        //glActiveTexture(GL_TEXTURE6);
-        //glBindTexture(GL_TEXTURE_2D, wallRoughnessMap);
-        //glActiveTexture(GL_TEXTURE7);
-        //glBindTexture(GL_TEXTURE_2D, wallAOMap);
-
-        //model = glm::mat4(1.0f);
-        //model = glm::translate(model, glm::vec3(3.0, 0.0, 2.0));
-        //pbrShader.setMat4("model", model);
-        //pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-        //renderSphere();
-
         // render light source (simply re-render sphere at light positions)
         // this looks a bit off as we use the same shader, but it'll make their positions obvious and 
         // keeps the codeprint small.
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, plasticAlbedoMap);
         glActiveTexture(GL_TEXTURE4);
-        glBindTexture(GL_TEXTURE_2D, plasticNormalMap);
+        glBindTexture(GL_TEXTURE_2D, plasticAlbedoMap);
         glActiveTexture(GL_TEXTURE5);
-        glBindTexture(GL_TEXTURE_2D, plasticMetallicMap);
+        glBindTexture(GL_TEXTURE_2D, plasticNormalMap);
         glActiveTexture(GL_TEXTURE6);
-        glBindTexture(GL_TEXTURE_2D, plasticRoughnessMap);
+        glBindTexture(GL_TEXTURE_2D, plasticMetallicMap);
         glActiveTexture(GL_TEXTURE7);
+        glBindTexture(GL_TEXTURE_2D, plasticRoughnessMap);
+        glActiveTexture(GL_TEXTURE8);
         glBindTexture(GL_TEXTURE_2D, plasticAOMap);
         for (unsigned int i = 0; i < numOfLights; ++i)
         {
@@ -695,7 +632,7 @@ int main()
         debugDepthQuad.use();
         debugDepthQuad.setFloat("near_plane", nearPlane);
         debugDepthQuad.setFloat("far_plane", farPlane);
-        glActiveTexture(GL_TEXTURE8);
+        glActiveTexture(GL_TEXTURE3);
         glBindTexture(GL_TEXTURE_2D, depthMap);
         //renderQuad();
 
@@ -703,6 +640,8 @@ int main()
         // -------------------------------------------------------------------------------
         glfwSwapBuffers(window);
         glfwPollEvents();
+
+        //std::cout << "max texture number: " << PBRMesh::maxTextureNumber << std::endl;
     }
 
     // glfw: terminate, clearing all previously allocated GLFW resources.
@@ -711,24 +650,27 @@ int main()
     return 0;
 }
 
-void renderSceneDepth(Shader& shader, PBRModel& pbrModel) {
+void renderSceneDepth(Shader& shader, PBRModel& pbrModel, glm::vec3 oldLightPos) {
     glm::mat4 model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(1.0f));
+    model = glm::scale(model, glm::vec3(0.01f));
     model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
     shader.setMat4("model", model);
     pbrModel.Draw(shader);
 
     model = glm::mat4(1.0f);
     model = glm::translate(model, glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(1.0f));
+    model = glm::scale(model, glm::vec3(0.01f));
     model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0, 1, 0));
     model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
     shader.setMat4("model", model);
     pbrModel.Draw(shader);
 
     model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(-3.0, 0.0, 2.0));
+    //model = glm::translate(model, glm::vec3(-3.0, 0.0, 2.0));
+    glm::vec3 pos = oldLightPos * 0.5f;
+    model = glm::translate(model, pos);
+    model = glm::scale(model, glm::vec3(2.5f));
     shader.setMat4("model", model);
     renderSphere();
 }
@@ -749,18 +691,31 @@ void processInput(GLFWwindow *window)
     }
 
     if (canRotatebackgroundFlag != 3) {
-    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        camera.ProcessKeyboard(FORWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        camera.ProcessKeyboard(BACKWARD, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        camera.ProcessKeyboard(LEFT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        camera.ProcessKeyboard(RIGHT, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-        camera.ProcessKeyboard(UP, deltaTime);
-    if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-        camera.ProcessKeyboard(DOWN, deltaTime);
+        glm::vec3 movement(0.0f);
+        if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+            movement += camera.Front;
+        if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+            movement -= camera.Front;
+        if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+            movement -= camera.Right;
+        if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+            movement += camera.Right;
+        if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+            movement += camera.Up;
+        if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+            movement -= camera.Up;
+
+        movement = glm::normalize(movement);
+        if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS) {
+            movement *= fastMoveSpeed;
+        }
+        else {
+            movement *= normalMoveSpeed;
+        }
+
+        if (glm::length(movement) > 0.5f) {
+            camera.Position += movement * deltaTime;
+        }
     }
 
 
