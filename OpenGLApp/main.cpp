@@ -152,7 +152,7 @@ int main()
 
     // lights
     // ------
-    const int numOfLights = 1;
+    const int numOfLights = 0;
     glm::vec3 lightPositions[] = {
         glm::vec3(-10.0f,  10.0f, 10.0f),
         glm::vec3( 10.0f,  10.0f, 10.0f),
@@ -182,13 +182,16 @@ int main()
     // ---------------------------------
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrComponents;
-    float *data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/newport_loft.hdr").c_str(), &width, &height, &nrComponents, 0);
+    //float *data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/newport_loft.hdr").c_str(), &width, &height, &nrComponents, 0);
+    float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/morning_2k.hdr").c_str(), &width, &height, &nrComponents, 0);
+
     unsigned int hdrTexture;
     if (data)
     {
         glGenTextures(1, &hdrTexture);
         glBindTexture(GL_TEXTURE_2D, hdrTexture);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data); // note how we specify the texture's data value to be float
+        //glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16F, width, height, 0, GL_RGB, GL_FLOAT, data); // note how we specify the texture's data value to be float
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA32F, width, height, 0, GL_RGB, GL_FLOAT, data);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -423,6 +426,7 @@ int main()
         glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
 
         glm::mat4 envRotMat = glm::rotate(glm::mat4(1.0f), glm::radians(-backgroundRotateAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 invEnvRotMat = glm::rotate(glm::mat4(1.0f), glm::radians(backgroundRotateAngle), glm::vec3(0.0f, 1.0f, 0.0f));
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
@@ -539,7 +543,7 @@ int main()
         for (unsigned int i = 0; i < numOfLights; ++i)
         {
             //glm::vec3 newPos = lightPositions[i] + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);
-            glm::vec3 newPos = glm::vec3(envRotMat * glm::vec4(lightPositions[i], 1.0f));
+            glm::vec3 newPos = glm::vec3(invEnvRotMat * glm::vec4(lightPositions[i], 1.0f));
             //newPos = lightPositions[i];
             pbrShader.setVec3("lightPositions[" + std::to_string(i) + "]", newPos);
             pbrShader.setVec3("lightColors[" + std::to_string(i) + "]", lightColors[i]);
@@ -591,6 +595,15 @@ void processInput(GLFWwindow *window)
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
+    unsigned int leftAltDownStatus = glfwGetKey(window, GLFW_KEY_LEFT_ALT);
+    if (leftAltDownStatus == GLFW_PRESS) {
+        canRotatebackgroundFlag |= 1; // first bit 01
+    }
+    else {
+        canRotatebackgroundFlag &= ~1;
+    }
+
+    if (canRotatebackgroundFlag != 3) {
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         camera.ProcessKeyboard(FORWARD, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
@@ -603,14 +616,8 @@ void processInput(GLFWwindow *window)
         camera.ProcessKeyboard(UP, deltaTime);
     if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
         camera.ProcessKeyboard(DOWN, deltaTime);
+    }
 
-    unsigned int leftAltDownStatus = glfwGetKey(window, GLFW_KEY_LEFT_ALT);
-    if (leftAltDownStatus == GLFW_PRESS) {
-        canRotatebackgroundFlag |= 1; // first bit 01
-    }
-    else {
-        canRotatebackgroundFlag &= ~1;
-    }
 
     //if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
     //    backgroundRotateAngle += 30.0f * deltaTime;
