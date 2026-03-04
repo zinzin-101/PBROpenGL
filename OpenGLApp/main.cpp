@@ -43,6 +43,45 @@ float backgroundRotateAngle = 0.0f;
 unsigned int canRotatebackgroundFlag = 0; // can rotate if first 2 bits are 1 | first bit = left alt, second bit = left click
 float rotateSensitivity = 15.0f; // in degrees
 
+// PBR material textures
+// --------------------------
+// rusted iron
+unsigned int ironAlbedoMap;
+unsigned int ironNormalMap;
+unsigned int ironMetallicMap;
+unsigned int ironRoughnessMap;
+unsigned int ironAOMap;
+
+// gold
+unsigned int goldAlbedoMap;
+unsigned int goldNormalMap;
+unsigned int goldMetallicMap;
+unsigned int goldRoughnessMap;
+unsigned int goldAOMap;
+
+// grass
+unsigned int grassAlbedoMap;
+unsigned int grassNormalMap;
+unsigned int grassMetallicMap;
+unsigned int grassRoughnessMap;
+unsigned int grassAOMap;
+
+// plastic
+unsigned int plasticAlbedoMap;
+unsigned int plasticNormalMap;
+unsigned int plasticMetallicMap;
+unsigned int plasticRoughnessMap;
+unsigned int plasticAOMap;
+
+// wall
+unsigned int wallAlbedoMap;
+unsigned int wallNormalMap;
+unsigned int wallMetallicMap;
+unsigned int wallRoughnessMap;
+unsigned int wallAOMap;
+
+void renderSceneDepth(Shader& shader, PBRModel& pbrModel);
+
 int main()
 {
     // glfw: initialize and configure
@@ -59,7 +98,7 @@ int main()
 
     // glfw window creation
     // --------------------
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "LearnOpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "PBROpenGL", NULL, NULL);
     glfwMakeContextCurrent(window);
     if (window == NULL)
     {
@@ -100,6 +139,9 @@ int main()
     Shader brdfShader("2.2.2.brdf.vs", "2.2.2.brdf.fs");
     Shader backgroundShader("2.2.2.background.vs", "2.2.2.background.fs");
 
+    Shader depthShader("3.1.3.shadow_mapping_depth.vs", "3.1.3.shadow_mapping_depth.fs");
+    Shader debugDepthQuad("3.1.3.debug_quad.vs", "3.1.3.debug_quad_depth.fs");
+
     pbrShader.use();
     pbrShader.setInt("irradianceMap", 0);
     pbrShader.setInt("prefilterMap", 1);
@@ -109,6 +151,11 @@ int main()
     pbrShader.setInt("metallicMap", 5);
     pbrShader.setInt("roughnessMap", 6);
     pbrShader.setInt("aoMap", 7);
+    
+    // shadow map shader
+    pbrShader.setInt("shadowMap", 8);
+    debugDepthQuad.use();
+    debugDepthQuad.setInt("depthMap", 8);
 
     backgroundShader.use();
     backgroundShader.setInt("environmentMap", 0);
@@ -116,45 +163,46 @@ int main()
     // load PBR material textures
     // --------------------------
     // rusted iron
-    unsigned int ironAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/rusted_iron/albedo.png").c_str());
-    unsigned int ironNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/rusted_iron/normal.png").c_str());
-    unsigned int ironMetallicMap = loadTexture(FileSystem::getPath("resources/textures/pbr/rusted_iron/metallic.png").c_str());
-    unsigned int ironRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/rusted_iron/roughness.png").c_str());
-    unsigned int ironAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/rusted_iron/ao.png").c_str());
+    ironAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/rusted_iron/albedo.png").c_str());
+    ironNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/rusted_iron/normal.png").c_str());
+    ironMetallicMap = loadTexture(FileSystem::getPath("resources/textures/pbr/rusted_iron/metallic.png").c_str());
+    ironRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/rusted_iron/roughness.png").c_str());
+    ironAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/rusted_iron/ao.png").c_str());
 
     // gold
-    unsigned int goldAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/gold/albedo.png").c_str());
-    unsigned int goldNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/gold/normal.png").c_str());
-    unsigned int goldMetallicMap = loadTexture(FileSystem::getPath("resources/textures/pbr/gold/metallic.png").c_str());
-    unsigned int goldRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/gold/roughness.png").c_str());
-    unsigned int goldAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/gold/ao.png").c_str());
+    goldAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/gold/albedo.png").c_str());
+    goldNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/gold/normal.png").c_str());
+    goldMetallicMap = loadTexture(FileSystem::getPath("resources/textures/pbr/gold/metallic.png").c_str());
+    goldRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/gold/roughness.png").c_str());
+    goldAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/gold/ao.png").c_str());
 
     // grass
-    unsigned int grassAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/grass/albedo.png").c_str());
-    unsigned int grassNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/grass/normal.png").c_str());
-    unsigned int grassMetallicMap = loadTexture(FileSystem::getPath("resources/textures/pbr/grass/metallic.png").c_str());
-    unsigned int grassRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/grass/roughness.png").c_str());
-    unsigned int grassAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/grass/ao.png").c_str());
+    grassAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/grass/albedo.png").c_str());
+    grassNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/grass/normal.png").c_str());
+    grassMetallicMap = loadTexture(FileSystem::getPath("resources/textures/pbr/grass/metallic.png").c_str());
+    grassRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/grass/roughness.png").c_str());
+    grassAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/grass/ao.png").c_str());
 
     // plastic
-    unsigned int plasticAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/plastic/albedo.png").c_str());
-    unsigned int plasticNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/plastic/normal.png").c_str());
-    unsigned int plasticMetallicMap = loadTexture(FileSystem::getPath("resources/textures/pbr/plastic/metallic.png").c_str());
-    unsigned int plasticRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/plastic/roughness.png").c_str());
-    unsigned int plasticAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/plastic/ao.png").c_str());
+    plasticAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/plastic/albedo.png").c_str());
+    plasticNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/plastic/normal.png").c_str());
+    plasticMetallicMap = loadTexture(FileSystem::getPath("resources/textures/pbr/plastic/metallic.png").c_str());
+    plasticRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/plastic/roughness.png").c_str());
+    plasticAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/plastic/ao.png").c_str());
 
     // wall
-    unsigned int wallAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/wall/albedo.png").c_str());
-    unsigned int wallNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/wall/normal.png").c_str());
-    unsigned int wallMetallicMap = loadTexture(FileSystem::getPath("resources/textures/pbr/wall/metallic.png").c_str());
-    unsigned int wallRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/wall/roughness.png").c_str());
-    unsigned int wallAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/wall/ao.png").c_str());
+    wallAlbedoMap = loadTexture(FileSystem::getPath("resources/textures/pbr/wall/albedo.png").c_str());
+    wallNormalMap = loadTexture(FileSystem::getPath("resources/textures/pbr/wall/normal.png").c_str());
+    wallMetallicMap = loadTexture(FileSystem::getPath("resources/textures/pbr/wall/metallic.png").c_str());
+    wallRoughnessMap = loadTexture(FileSystem::getPath("resources/textures/pbr/wall/roughness.png").c_str());
+    wallAOMap = loadTexture(FileSystem::getPath("resources/textures/pbr/wall/ao.png").c_str());
 
     // lights
     // ------
-    const int numOfLights = 0;
+    const int numOfLights = 1;
     glm::vec3 lightPositions[] = {
         glm::vec3(-10.0f,  10.0f, 10.0f),
+        //glm::vec3(0.0f,  10.0f, 0.0f),
         glm::vec3( 10.0f,  10.0f, 10.0f),
         glm::vec3(-10.0f, -10.0f, 10.0f),
         glm::vec3( 10.0f, -10.0f, 10.0f),
@@ -184,6 +232,8 @@ int main()
     int width, height, nrComponents;
     //float *data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/newport_loft.hdr").c_str(), &width, &height, &nrComponents, 0);
     float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/morning_2k.hdr").c_str(), &width, &height, &nrComponents, 0);
+    //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/puresky_2k.hdr").c_str(), &width, &height, &nrComponents, 0);
+    //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/studio.hdr").c_str(), &width, &height, &nrComponents, 0);
 
     unsigned int hdrTexture;
     if (data)
@@ -372,6 +422,29 @@ int main()
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+    // shadow map: configure FBO
+    // -------------------------
+    const unsigned int SHADOW_WIDTH = 4096;
+    const unsigned int SHADOW_HEIGHT = 4096;
+    unsigned int depthMapFBO;
+    glGenFramebuffers(1, &depthMapFBO);
+    // create depth texture
+    unsigned int depthMap;
+    glGenTextures(1, &depthMap);
+    glBindTexture(GL_TEXTURE_2D, depthMap);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, SHADOW_WIDTH, SHADOW_HEIGHT, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
+    float borderColor[] = { 1.0, 1.0, 1.0, 1.0 };
+    glTexParameterfv(GL_TEXTURE_2D, GL_TEXTURE_BORDER_COLOR, borderColor);
+    // attach depth texture as FBO's depth buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthMap, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     // initialize static shader uniforms before rendering
     // --------------------------------------------------
@@ -391,9 +464,9 @@ int main()
 
     // render loop
     // -----------
+    std::cout << "entering render loop" << std::endl;
     while (!glfwWindowShouldClose(window))
     {
-
         // per-frame time logic
         // --------------------
         float currentFrame = static_cast<float>(glfwGetTime());
@@ -407,6 +480,41 @@ int main()
         // render
         // ------
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        // envmap rotation
+        glm::mat4 envRotMat = glm::rotate(glm::mat4(1.0f), glm::radians(-backgroundRotateAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+        glm::mat4 invEnvRotMat = glm::rotate(glm::mat4(1.0f), glm::radians(backgroundRotateAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+
+        // update shader light positions
+        for (unsigned int i = 0; i < 4; ++i)
+        {
+            //glm::vec3 newPos = lightPositions[i] + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);
+            glm::vec3 newPos = glm::vec3(invEnvRotMat * glm::vec4(lightPositions[i], 1.0f));
+            //newPos = lightPositions[i];
+            pbrShader.setVec3("lightPositions[" + std::to_string(i) + "]", newPos);
+        }
+
+        // render scene depth to texture from light source
+        // -----------------------------------------------
+        glm::mat4 lightProjection;
+        glm::mat4 lightView;
+        glm::mat4 lightSpaceMatrix;
+        float nearPlane = 0.1f;
+        float farPlane = 30.0f;
+        lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
+        glm::vec3 lightPos = glm::vec3(invEnvRotMat * glm::vec4(lightPositions[0], 1.0f));
+        lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+        lightSpaceMatrix = lightProjection * lightView;
+        depthShader.use();
+        depthShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
+        glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
+        glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
+        glClear(GL_DEPTH_BUFFER_BIT);
+        renderSceneDepth(depthShader, chestModel);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // reset viewport
+        glViewport(0, 0, scrWidth, scrHeight);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // render scene, supplying the convoluted irradiance map to the final shader.
@@ -425,16 +533,28 @@ int main()
         glActiveTexture(GL_TEXTURE2);
         glBindTexture(GL_TEXTURE_2D, brdfLUTTexture);
 
-        glm::mat4 envRotMat = glm::rotate(glm::mat4(1.0f), glm::radians(-backgroundRotateAngle), glm::vec3(0.0f, 1.0f, 0.0f));
-        glm::mat4 invEnvRotMat = glm::rotate(glm::mat4(1.0f), glm::radians(backgroundRotateAngle), glm::vec3(0.0f, 1.0f, 0.0f));
+        // bind shadow map
+        glActiveTexture(GL_TEXTURE8);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        
+        pbrShader.setMat4("envMapRotation", envRotMat);
+        pbrShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
         model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(1.0f));	// it's a bit too big for our scene, so scale it down
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(1.0f));	
         model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
         pbrShader.setMat4("model", model);
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-        pbrShader.setMat4("envMapRotation", envRotMat);
+        chestModel.Draw(pbrShader);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, glm::vec3(0.0f, 1.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(1.0f));
+        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0, 1, 0));
+        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+        pbrShader.setMat4("model", model);
+        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
         chestModel.Draw(pbrShader);
 
         //// rusted iron
@@ -553,6 +673,7 @@ int main()
             model = glm::scale(model, glm::vec3(0.5f));
             pbrShader.setMat4("model", model);
             pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+
             renderSphere();
         }
 
@@ -568,13 +689,15 @@ int main()
         model = glm::mat4(1.0f);
         model = glm::rotate(model, glm::radians(backgroundRotateAngle), glm::vec3(0.0f, 1.0f, 0.0f));
         backgroundShader.setMat4("model", model);
-
         renderCube();
 
-        // render BRDF map to screen
-        //brdfShader.Use();
+        // shadow map debug quad
+        debugDepthQuad.use();
+        debugDepthQuad.setFloat("near_plane", nearPlane);
+        debugDepthQuad.setFloat("far_plane", farPlane);
+        glActiveTexture(GL_TEXTURE8);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
         //renderQuad();
-
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -586,6 +709,28 @@ int main()
     // ------------------------------------------------------------------
     glfwTerminate();
     return 0;
+}
+
+void renderSceneDepth(Shader& shader, PBRModel& pbrModel) {
+    glm::mat4 model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+    model = glm::scale(model, glm::vec3(1.0f));
+    model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+    shader.setMat4("model", model);
+    pbrModel.Draw(shader);
+
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(0.0f, 1.0f, 0.0f));
+    model = glm::scale(model, glm::vec3(1.0f));
+    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0, 1, 0));
+    model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+    shader.setMat4("model", model);
+    pbrModel.Draw(shader);
+
+    model = glm::mat4(1.0f);
+    model = glm::translate(model, glm::vec3(-3.0, 0.0, 2.0));
+    shader.setMat4("model", model);
+    renderSphere();
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
