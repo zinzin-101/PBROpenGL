@@ -126,8 +126,10 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     // calculate bias (based on depth map resolution and slope)
     vec3 normal = normalize(Normal);
     vec3 lightDir = normalize(lightPositions[0] - WorldPos);
-    float bias = max(0.05 * (1.0 - dot(normal, lightDir)), 0.005);
-    //float bias = 0.001; 
+
+    float bias = -max(0.001 * (1.0 - dot(normal, lightDir)), 0.001);
+    //float bias = 0.005 * tan(acos(clamp(dot(normal, lightDir), 0.0, 1.0)));
+    //float bias = -0.001; 
     // check whether current frag pos is in shadow
     // float shadow = currentDepth - bias > closestDepth  ? 1.0 : 0.0;
     // PCF
@@ -165,7 +167,7 @@ void main()
     // material properties
     vec3 albedo = pow(texture(albedoMap1, TexCoords).rgb, vec3(2.2));
     float metallic = texture(metallicMap1, TexCoords).r;
-    float roughness = useMR ? texture(roughnessMap1, TexCoords).g : texture(roughnessMap1, TexCoords).r;
+    float roughness = useMR ? texture(roughnessMap1, TexCoords).g : texture(roughnessMap1, TexCoords).g;
     float ao = texture(aoMap1, TexCoords).r;
        
     // input lighting data
@@ -260,7 +262,7 @@ void main()
     color = pow(color, vec3(1.0/2.2)); 
 
     if (useCartoonShading){
-        color = texture(albedoMap1, TexCoords).rgb;
+        color = texture(albedoMap1, TexCoords).rgb + specular;
         float shadow = 1.0 - ShadowCalculation(FragPosLightSpace);
 
         float cellShading = (shadow < 0.6) ? 0.5 : 0.8;
@@ -275,5 +277,14 @@ void main()
     //FragColor = vec4(vec3(ShadowCalculation(FragPosLightSpace)),1.0);
     //float shadow = 1.0 - ShadowCalculation(FragPosLightSpace);
     //FragColor = vec4(vec3(shadow), 1.0);
+    //vec3 projCoords = FragPosLightSpace.xyz / FragPosLightSpace.w;
     //FragColor = vec4(vec3(texture(shadowMap, projCoords.xy).r), 1.0);
+    //FragColor = vec4(projCoords, 1.0);
+    //float depth = texture(shadowMap, TexCoords).r;
+    //float z = depth * 2.0 - 1.0; 
+    //float near = 0.1;
+    //float far = 50.0;
+    //float linearDepth = (2.0 * near * far) / (far + near - z * (far - near));
+    //FragColor = vec4(vec3(linearDepth / far), 1.0);
+    //FragColor = vec4(vec3(depth), 1.0);
 }

@@ -35,8 +35,8 @@ Camera camera(glm::vec3(0.0f, 0.0f, 2.0f));
 float lastX = 800.0f / 2.0;
 float lastY = 600.0 / 2.0;
 bool firstMouse = true;
-float normalMoveSpeed = 2.5f;
-float fastMoveSpeed = 10.0f;
+float normalMoveSpeed = 1.25f;
+float fastMoveSpeed = 5.0f;
 
 // timing
 float deltaTime = 0.0f;	
@@ -49,7 +49,7 @@ std::string pureSkyEnvMapPath = "resources/textures/hdr/puresky_2k.hdr";
 std::string studioEnvMapPath = "resources/textures/hdr/studio.hdr";
 std::string pisztykEnvMapPath = "resources/textures/hdr/pisztyk.hdr";
 std::string kloppenHeimPureSkyEnvMapPath = "resources/textures/hdr/kloppenheim_puresky.hdr";
-std::string currentEnvMapPath = morningSkyEnvMapPath;
+std::string currentEnvMapPath = studioEnvMapPath;
 
 // background rotation
 float backgroundRotateAngle = 0.0f;
@@ -61,6 +61,9 @@ bool debugLightPosition = false;
 bool debugShadowQuad = false;
 
 bool useDiffuseShadow = true;
+bool useCartoonShadingForAll = false;
+
+float lightHeight = 2.5f;
 
 // PBR material textures
 // --------------------------
@@ -113,6 +116,7 @@ PBRModel* shotgunModelPtr = nullptr;
 PBRModel* revolverGunModelPtr = nullptr;
 PBRModel* groundModelPtr = nullptr;
 PBRModel* chisaModelPtr = nullptr;
+PBRModel* scytheModelPtr = nullptr;
 glm::mat4 boxModelMat = glm::mat4(1.0f);
 glm::mat4 shotgunModelMat = glm::mat4(1.0f);
 glm::mat4 revolverGunModelMat = glm::mat4(1.0f);
@@ -120,6 +124,7 @@ glm::mat4 groundModelMat = glm::mat4(1.0f);
 glm::mat4 goldSphereModelMat = glm::mat4(1.0f);
 glm::mat4 goldSphereModelMat2 = glm::mat4(1.0f);
 glm::mat4 chisaModelMat = glm::mat4(1.0f);
+glm::mat4 scytheModelMat = glm::mat4(1.0f);
 
 int main()
 {
@@ -242,10 +247,10 @@ int main()
     const int numOfLights = 4;
     glm::vec3 lightPositions[] = {
         //glm::vec3(12.5f,  2.5f, 10.0f), // the first one is used for directional light
-        glm::vec3(5.0f,  2.5f, 4.0f),
-        glm::vec3(5.0f,  2.5f, 4.0f),
-        glm::vec3(5.0f,  2.5f, 4.0f),
-        glm::vec3(5.0f,  2.5f, 4.0f),
+        glm::vec3(2.5f,  0.5f, 2.0f),
+        glm::vec3(2.5f,  0.5f, 2.0f),
+        glm::vec3(2.5f,  0.5f, 2.0f),
+        glm::vec3(2.5f,  0.5f, 2.0f),
         //glm::vec3(0.0f,  10.0f, 0.0f),
         //glm::vec3( 10.0f,  10.0f, 10.0f),
         //glm::vec3(-10.0f, -10.0f, 10.0f),
@@ -513,11 +518,14 @@ int main()
 
     PBRModel chisaModel(FileSystem::getPath("resources/objects/chisa/scene.gltf"));
 
+    PBRModel scytheModel(FileSystem::getPath("resources/objects/scythe/scene.gltf"));
+
     shotgunModelPtr = &shotgunModel;
     revolverGunModelPtr = &revolverGunModel;
     boxModelPtr = &boxModel;
     groundModelPtr = &groundModel;
     chisaModelPtr = &chisaModel;
+    scytheModelPtr = &scytheModel;
 
     // render loop
     // -----------
@@ -547,6 +555,7 @@ int main()
         // update shader light positions
         for (unsigned int i = 0; i < 4; ++i)
         {
+            lightPositions[i].y = lightHeight;
             //glm::vec3 newPos = lightPositions[i] + glm::vec3(sin(glfwGetTime() * 5.0) * 5.0, 0.0, 0.0);
             glm::vec3 newPos = glm::vec3(invEnvRotMat * glm::vec4(lightPositions[i], 1.0f));
             //newPos = lightPositions[i];
@@ -556,39 +565,43 @@ int main()
         // calculate model position
         boxModelMat = glm::mat4(1.0f);
         boxModelMat = glm::translate(boxModelMat, glm::vec3(0.0f, 0.0f, 0.0f));
-        boxModelMat = glm::scale(boxModelMat, glm::vec3(0.01f));
+        boxModelMat = glm::scale(boxModelMat, glm::vec3(0.00875));
         boxModelMat = glm::rotate(boxModelMat, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 
         shotgunModelMat = glm::mat4(1.0f);
-        shotgunModelMat = glm::translate(shotgunModelMat, glm::vec3(0.75f, 0.35f, 0.0f));
-        shotgunModelMat = glm::scale(shotgunModelMat, glm::vec3(1.75f));
+        shotgunModelMat = glm::translate(shotgunModelMat, glm::vec3(0.5, 0.2305, 0.0f));
+        shotgunModelMat = glm::scale(shotgunModelMat, glm::vec3(0.875));
         shotgunModelMat = glm::rotate(shotgunModelMat, glm::radians(-90.0f), glm::vec3(0, 1, 0));
         shotgunModelMat = glm::rotate(shotgunModelMat, glm::radians(-76.0f), glm::vec3(1, 0, 0));
 
         revolverGunModelMat = glm::mat4(1.0f);
-        revolverGunModelMat = glm::translate(revolverGunModelMat, glm::vec3(0.0f, 1.0f, 0.0f));
-        revolverGunModelMat = glm::scale(revolverGunModelMat, glm::vec3(0.25f));
-        revolverGunModelMat = glm::rotate(revolverGunModelMat, glm::radians(-90.0f), glm::vec3(0, 1, 0));
-        revolverGunModelMat = glm::rotate(revolverGunModelMat, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+        revolverGunModelMat = glm::translate(revolverGunModelMat, glm::vec3(-0.35, 0.085f, 0.0f));
+        revolverGunModelMat = glm::scale(revolverGunModelMat, glm::vec3(0.15f));
+        revolverGunModelMat = glm::rotate(revolverGunModelMat, glm::radians(90.0f), glm::vec3(0, 1, 0));
+        revolverGunModelMat = glm::rotate(revolverGunModelMat, glm::radians(-65.0f), glm::vec3(1, 0, 0));
 
         groundModelMat = glm::mat4(1.0f);
-        groundModelMat = glm::translate(groundModelMat, glm::vec3(0.0f, -0.2, 0.0f));
-        groundModelMat = glm::scale(groundModelMat, glm::vec3(2.0f, 0.5f, 2.0f));
+        groundModelMat = glm::translate(groundModelMat, glm::vec3(0.0f, -0.1, 0.0f));
+        groundModelMat = glm::scale(groundModelMat, glm::vec3(1.2f, 0.25f, 1.2f));
         groundModelMat = glm::rotate(groundModelMat, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 
         goldSphereModelMat = glm::mat4(1.0f);
-        goldSphereModelMat = glm::translate(goldSphereModelMat, glm::vec3(1.5f, 1.0f, -1.0f));
-        goldSphereModelMat2 = glm::scale(goldSphereModelMat, glm::vec3(0.25f));
+        goldSphereModelMat = glm::translate(goldSphereModelMat, glm::vec3(0.75f, 0.5f, -0.5f));
+        goldSphereModelMat = glm::scale(goldSphereModelMat, glm::vec3(0.125f));
 
         goldSphereModelMat2 = glm::mat4(1.0f);
-        goldSphereModelMat2 = glm::translate(goldSphereModelMat2, glm::vec3(-1.5f, 1.0f, -1.0f));
-        goldSphereModelMat2 = glm::scale(goldSphereModelMat2, glm::vec3(0.5f));
+        goldSphereModelMat2 = glm::translate(goldSphereModelMat2, glm::vec3(-0.75f, 0.5f, -0.5f));
+        goldSphereModelMat2 = glm::scale(goldSphereModelMat2, glm::vec3(0.25f));
 
         chisaModelMat = glm::mat4(1.0f);
-        chisaModelMat = glm::translate(chisaModelMat, glm::vec3(0.0f, -0.2f, -1.0f));
-        chisaModelMat = glm::scale(chisaModelMat, glm::vec3(0.015f));
+        chisaModelMat = glm::translate(chisaModelMat, glm::vec3(0.0f, -0.1f, -0.5f));
+        chisaModelMat = glm::scale(chisaModelMat, glm::vec3(0.0075));
         chisaModelMat = glm::rotate(chisaModelMat, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 
+        scytheModelMat = glm::mat4(1.0f);
+        scytheModelMat = glm::translate(scytheModelMat, glm::vec3(-1.0f, 0.5f, 0.0f));
+        scytheModelMat  = glm::scale(scytheModelMat, glm::vec3(0.0075));
+        scytheModelMat = glm::rotate(scytheModelMat, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 
         // render scene depth to texture from light source
         // -----------------------------------------------
@@ -596,8 +609,8 @@ int main()
         glm::mat4 lightView;
         glm::mat4 lightSpaceMatrix;
         float nearPlane = 2.0f;
-        float farPlane = 15.0f;
-        lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
+        float farPlane = 12.0f;
+        lightProjection = glm::ortho(-5.0f, 5.0f, -5.0f, 5.0f, nearPlane, farPlane);
         glm::vec3 lightPos = glm::vec3(invEnvRotMat * glm::vec4(lightPositions[0], 1.0f));
         lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
         lightSpaceMatrix = lightProjection * lightView;
@@ -606,7 +619,11 @@ int main()
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_FRONT);
         renderSceneDepth(depthShader, lightPositions[0]);
+        glCullFace(GL_BACK);
+        glDisable(GL_CULL_FACE);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         // reset viewport
         glViewport(0, 0, scrWidth, scrHeight);
@@ -620,7 +637,7 @@ int main()
         pbrShader.setMat4("view", view);
         pbrShader.setVec3("camPos", camera.Position);
         pbrShader.setBool("useDiffuseShadow", useDiffuseShadow);
-        pbrShader.setBool("useCartoonShading", false);
+        pbrShader.setBool("useCartoonShading", useCartoonShadingForAll);
 
         // bind pre-computed IBL data
         glActiveTexture(GL_TEXTURE0);
@@ -653,12 +670,15 @@ int main()
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(chisaModelMat))));
         pbrShader.setBool("useCartoonShading", true);
         chisaModel.Draw(pbrShader);
-        pbrShader.setBool("useCartoonShading", false);
+        pbrShader.setBool("useCartoonShading", useCartoonShadingForAll);
 
         pbrShader.setMat4("model", groundModelMat);
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(groundModelMat))));
         groundModel.Draw(pbrShader);
 
+        pbrShader.setMat4("model", scytheModelMat);
+        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(scytheModelMat))));
+        scytheModel.Draw(pbrShader);
 
         // gold
         glActiveTexture(GL_TEXTURE4);
@@ -776,6 +796,9 @@ void renderSceneDepth(Shader& shader, glm::vec3 oldLightPos) {
     shader.setMat4("model", chisaModelMat);
     chisaModelPtr->Draw(shader);
 
+    shader.setMat4("model", scytheModelMat);
+    scytheModelPtr->Draw(shader);
+
     //model = glm::mat4(1.0f);
     ////model = glm::translate(model, glm::vec3(-3.0, 0.0, 2.0));
     //glm::vec3 pos = oldLightPos * 0.5f;
@@ -857,6 +880,12 @@ void processInput(GLFWwindow *window)
         }
     }
 
+    if (glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS) {
+        lightHeight += 1.0f * deltaTime;
+    }
+    else if (glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS) {
+        lightHeight -= 1.0f * deltaTime;
+    }
 
     //if (glfwGetKey(window, GLFW_KEY_X) == GLFW_PRESS) {
     //    backgroundRotateAngle += 30.0f * deltaTime;

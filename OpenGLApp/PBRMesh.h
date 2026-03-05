@@ -152,7 +152,7 @@ public:
             // and finally bind the texture
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
 
-            //maxTextureNumber = std::max(maxTextureNumber, std::stoi(number));
+            maxTextureNumber = std::max(maxTextureNumber, std::stoi(number));
         }
 
         // draw mesh
