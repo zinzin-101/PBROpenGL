@@ -41,6 +41,8 @@ uniform vec3 lightColors[4];
 
 uniform vec3 camPos;
 
+uniform bool useCartoonShading;
+
 const float PI = 3.14159265359;
 // ----------------------------------------------------------------------------
 // Easy trick to get tangent-normals to world-space to keep PBR code simplified.
@@ -148,6 +150,16 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     return shadow;
 }
 // ----------------------------------------------------------------------------
+
+vec3 GetSaturation(vec3 rgb, float adjustment) {
+    // Standard weighting factors for luminance (from Rec. 709)
+    const vec3 W = vec3(0.2125, 0.7154, 0.0721);
+    // Calculate the intensity of the color
+    vec3 intensity = vec3(dot(rgb, W));
+    // 0 -> greyscale, 1 -> original color
+    return mix(intensity, rgb, adjustment);
+}
+
 void main()
 {		
     // material properties
@@ -241,11 +253,21 @@ void main()
     vec3 ambient = (kD * diffuse + specular) * ao;
 
     vec3 color = ambient + Lo;
-
+    
     // HDR tonemapping
     color = color / (color + vec3(1.0));
     // gamma correct
     color = pow(color, vec3(1.0/2.2)); 
+
+    if (useCartoonShading){
+        color = texture(albedoMap1, TexCoords).rgb;
+        float shadow = 1.0 - ShadowCalculation(FragPosLightSpace);
+
+        float cellShading = (shadow < 0.6) ? 0.5 : 0.8;
+
+        color *= cellShading;
+        color = GetSaturation(color, 1.5);
+    }
 
     //float shadow = ShadowCalculation(FragPosLightSpace);
     //color *= (1.0 - shadow);

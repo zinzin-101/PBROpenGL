@@ -42,6 +42,15 @@ float fastMoveSpeed = 10.0f;
 float deltaTime = 0.0f;	
 float lastFrame = 0.0f;
 
+// envmap selection
+std::string newPortEnvMapPath = "resources/textures/hdr/newport_loft.hdr";
+std::string morningSkyEnvMapPath = "resources/textures/hdr/morning_2k.hdr";
+std::string pureSkyEnvMapPath = "resources/textures/hdr/puresky_2k.hdr";
+std::string studioEnvMapPath = "resources/textures/hdr/studio.hdr";
+std::string pisztykEnvMapPath = "resources/textures/hdr/pisztyk.hdr";
+std::string kloppenHeimPureSkyEnvMapPath = "resources/textures/hdr/kloppenheim_puresky.hdr";
+std::string currentEnvMapPath = morningSkyEnvMapPath;
+
 // background rotation
 float backgroundRotateAngle = 0.0f;
 unsigned int canRotatebackgroundFlag = 0; // can rotate if first 2 bits are 1 | first bit = left alt, second bit = left click
@@ -265,12 +274,7 @@ int main()
     // ---------------------------------
     stbi_set_flip_vertically_on_load(true);
     int width, height, nrComponents;
-    //float *data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/newport_loft.hdr").c_str(), &width, &height, &nrComponents, 0);
-    //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/morning_2k.hdr").c_str(), &width, &height, &nrComponents, 0);
-    float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/puresky_2k.hdr").c_str(), &width, &height, &nrComponents, 0);
-    //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/studio.hdr").c_str(), &width, &height, &nrComponents, 0);
-    //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/pisztyk.hdr").c_str(), &width, &height, &nrComponents, 0);
-    //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/kloppenheim_puresky.hdr").c_str(), &width, &height, &nrComponents, 0);
+    float* data = stbi_loadf(FileSystem::getPath(currentEnvMapPath).c_str(), &width, &height, &nrComponents, 0);
 
     unsigned int hdrTexture;
     if (data)
@@ -563,7 +567,8 @@ int main()
 
         revolverGunModelMat = glm::mat4(1.0f);
         revolverGunModelMat = glm::translate(revolverGunModelMat, glm::vec3(0.0f, 1.0f, 0.0f));
-        revolverGunModelMat = glm::scale(revolverGunModelMat, glm::vec3(1.f));
+        revolverGunModelMat = glm::scale(revolverGunModelMat, glm::vec3(0.25f));
+        revolverGunModelMat = glm::rotate(revolverGunModelMat, glm::radians(-90.0f), glm::vec3(0, 1, 0));
         revolverGunModelMat = glm::rotate(revolverGunModelMat, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 
         groundModelMat = glm::mat4(1.0f);
@@ -615,6 +620,7 @@ int main()
         pbrShader.setMat4("view", view);
         pbrShader.setVec3("camPos", camera.Position);
         pbrShader.setBool("useDiffuseShadow", useDiffuseShadow);
+        pbrShader.setBool("useCartoonShading", false);
 
         // bind pre-computed IBL data
         glActiveTexture(GL_TEXTURE0);
@@ -645,7 +651,9 @@ int main()
 
         pbrShader.setMat4("model", chisaModelMat);
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(chisaModelMat))));
+        pbrShader.setBool("useCartoonShading", true);
         chisaModel.Draw(pbrShader);
+        pbrShader.setBool("useCartoonShading", false);
 
         pbrShader.setMat4("model", groundModelMat);
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(groundModelMat))));
