@@ -32,9 +32,10 @@ uniform mat4 envMapRotation;
 
 // shadow map
 uniform sampler2D shadowMap;
+uniform bool useDiffuseShadow;
 
 // lights
-#define NUM_OF_LIGHTS 4
+#define NUM_OF_LIGHTS 0
 uniform vec3 lightPositions[4];
 uniform vec3 lightColors[4];
 
@@ -228,7 +229,16 @@ void main()
     vec2 brdf  = texture(brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
     vec3 specular = prefilteredColor * (F * brdf.x + brdf.y);
 
-    vec3 ambient = (kD * diffuse + specular) * ao;    
+
+    // apply shadow without calculating from light source to prevent incorrect specular from envmap mismatch
+    // apply a subtle shadow influence to the ambient term
+    if (useDiffuseShadow) {
+        float shadow = 1.0 - ShadowCalculation(FragPosLightSpace);
+        float diffuseShadow = mix(0.2, 1.0, shadow);
+        diffuse *= diffuseShadow;
+    }
+
+    vec3 ambient = (kD * diffuse + specular) * ao;
 
     vec3 color = ambient + Lo;
 

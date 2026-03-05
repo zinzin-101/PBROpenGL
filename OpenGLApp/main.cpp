@@ -48,8 +48,10 @@ unsigned int canRotatebackgroundFlag = 0; // can rotate if first 2 bits are 1 | 
 float rotateSensitivity = 15.0f; // in degrees
 bool toggleEnvironmentMap = true;
 
-bool debugLightPosition = true;
+bool debugLightPosition = false;
 bool debugShadowQuad = false;
+
+bool useDiffuseShadow = true;
 
 // PBR material textures
 // --------------------------
@@ -241,10 +243,10 @@ int main()
         //glm::vec3( 10.0f, -10.0f, 10.0f),
     };
     glm::vec3 lightColors[] = {
-        glm::vec3(100.0f, 100.0f, 100.0f),
-        glm::vec3(100.0f, 100.0f, 100.0f),
-        glm::vec3(100.0f, 100.0f, 100.0f),
-        glm::vec3(100.0f, 100.0f, 100.0f)
+        glm::vec3(200.0f, 200.0f, 200.0f),
+        glm::vec3(200.0f, 200.0f, 200.0f),
+        glm::vec3(200.0f, 200.0f, 200.0f),
+        glm::vec3(200.0f, 200.0f, 200.0f)
     };
 
     // pbr: setup framebuffer
@@ -612,6 +614,7 @@ int main()
         glm::mat4 view = camera.GetViewMatrix();
         pbrShader.setMat4("view", view);
         pbrShader.setVec3("camPos", camera.Position);
+        pbrShader.setBool("useDiffuseShadow", useDiffuseShadow);
 
         // bind pre-computed IBL data
         glActiveTexture(GL_TEXTURE0);
