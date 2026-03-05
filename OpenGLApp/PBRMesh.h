@@ -77,6 +77,7 @@ public:
         for (unsigned int i = 0; i < textures.size(); i++)
         {
             glActiveTexture(GL_TEXTURE4 + i); // start at texture 4 since 0-2 are used for IBL data and 3 for shadow map
+            glBindTexture(GL_TEXTURE_2D, 0);
             // retrieve texture number (the N in diffuse_textureN)
             string number;
             string name = textures[i].type;

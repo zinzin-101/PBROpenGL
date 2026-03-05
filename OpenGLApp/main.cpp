@@ -13,12 +13,14 @@
 #include "PBRModel.h"
 
 #include <iostream>
+#include <map>
 
 void framebufferSizeCallback(GLFWwindow* window, int width, int height);
 void mouseCallback(GLFWwindow* window, double xpos, double ypos);
 void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods);
 void scrollCallback(GLFWwindow* window, double xoffset, double yoffset);
 void processInput(GLFWwindow *window);
+bool getKeyDown(GLFWwindow* window, unsigned int key);
 unsigned int loadTexture(const char *path);
 void renderSphere();
 void renderCube();
@@ -29,7 +31,7 @@ const unsigned int SCR_WIDTH = 1280;
 const unsigned int SCR_HEIGHT = 720;
 
 // camera
-Camera camera(glm::vec3(0.0f, 0.0f, 3.0f));
+Camera camera(glm::vec3(0.0f, 0.0f, 2.0f));
 float lastX = 800.0f / 2.0;
 float lastY = 600.0 / 2.0;
 bool firstMouse = true;
@@ -44,6 +46,9 @@ float lastFrame = 0.0f;
 float backgroundRotateAngle = 0.0f;
 unsigned int canRotatebackgroundFlag = 0; // can rotate if first 2 bits are 1 | first bit = left alt, second bit = left click
 float rotateSensitivity = 15.0f; // in degrees
+bool toggleEnvironmentMap = true;
+
+bool debugLightPosition = false;
 
 // PBR material textures
 // --------------------------
@@ -82,8 +87,18 @@ unsigned int wallMetallicMap;
 unsigned int wallRoughnessMap;
 unsigned int wallAOMap;
 
-void renderSceneDepth(Shader& shader, PBRModel& pbrModel, glm::vec3 oldLightPos);
+void renderSceneDepth(Shader& shader, glm::vec3 oldLightPos);
 int PBRMesh::maxTextureNumber = 0;
+PBRModel* boxModelPtr = nullptr;
+PBRModel* shotgunModelPtr = nullptr;
+PBRModel* groundModelPtr = nullptr;
+PBRModel* chisaModelPtr = nullptr;
+glm::mat4 boxModelMat = glm::mat4(1.0f);
+glm::mat4 shotgunModelMat = glm::mat4(1.0f);
+glm::mat4 groundModelMat = glm::mat4(1.0f);
+glm::mat4 goldSphereModelMat = glm::mat4(1.0f);
+glm::mat4 goldSphereModelMat2 = glm::mat4(1.0f);
+glm::mat4 chisaModelMat = glm::mat4(1.0f);
 
 int main()
 {
@@ -202,19 +217,22 @@ int main()
 
     // lights
     // ------
-    const int numOfLights = 1;
+    const int numOfLights = 4;
     glm::vec3 lightPositions[] = {
-        glm::vec3(-10.0f,  10.0f, 10.0f), // the first one is used for directional light
+        glm::vec3(12.5f,  2.5f, 10.0f), // the first one is used for directional light
+        glm::vec3(12.5f,  2.5f, 10.0f),
+        glm::vec3(12.5f,  2.5f, 10.0f),
+        glm::vec3(12.5f,  2.5f, 10.0f),
         //glm::vec3(0.0f,  10.0f, 0.0f),
-        glm::vec3( 10.0f,  10.0f, 10.0f),
-        glm::vec3(-10.0f, -10.0f, 10.0f),
-        glm::vec3( 10.0f, -10.0f, 10.0f),
+        //glm::vec3( 10.0f,  10.0f, 10.0f),
+        //glm::vec3(-10.0f, -10.0f, 10.0f),
+        //glm::vec3( 10.0f, -10.0f, 10.0f),
     };
     glm::vec3 lightColors[] = {
-        glm::vec3(500.0f, 500.0f, 500.0f),
-        glm::vec3(500.0f, 500.0f, 500.0f),
-        glm::vec3(500.0f, 500.0f, 500.0f),
-        glm::vec3(500.0f, 500.0f, 500.0f)
+        glm::vec3(1000.0f, 1000.0f, 1000.0f),
+        glm::vec3(1000.0f, 1000.0f, 1000.0f),
+        glm::vec3(1000.0f, 1000.0f, 1000.0f),
+        glm::vec3(1000.0f, 1000.0f, 1000.0f)
     };
 
     // pbr: setup framebuffer
@@ -236,8 +254,8 @@ int main()
     //float *data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/newport_loft.hdr").c_str(), &width, &height, &nrComponents, 0);
     //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/morning_2k.hdr").c_str(), &width, &height, &nrComponents, 0);
     //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/puresky_2k.hdr").c_str(), &width, &height, &nrComponents, 0);
-    float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/studio.hdr").c_str(), &width, &height, &nrComponents, 0);
-    // float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/pisztyk.hdr").c_str(), &width, &height, &nrComponents, 0);
+    //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/studio.hdr").c_str(), &width, &height, &nrComponents, 0);
+    float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/pisztyk.hdr").c_str(), &width, &height, &nrComponents, 0);
     //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/kloppenheim_puresky.hdr").c_str(), &width, &height, &nrComponents, 0);
 
     unsigned int hdrTexture;
@@ -466,7 +484,20 @@ int main()
 
     stbi_set_flip_vertically_on_load(false); // for loading model texture
     //PBRModel currentModel(FileSystem::getPath("resources/objects/wooden_chest/scene.gltf"));
-    PBRModel currentModel(FileSystem::getPath("resources/objects/chisa/scene.gltf"));
+    //PBRModel currentModel(FileSystem::getPath("resources/objects/chisa/scene.gltf"));
+    PBRModel shotgunModel(FileSystem::getPath("resources/objects/shotgun/scene.gltf"));
+    PBRModel boxModel(FileSystem::getPath("resources/objects/military_box/scene.gltf"));
+    //PBRModel currentModel(FileSystem::getPath("resources/objects/wheel/wheel.glb"));
+
+    PBRModel groundModel(FileSystem::getPath("resources/objects/stone_ground/scene.gltf"));
+    //PBRModel groundModel(FileSystem::getPath("resources/objects/rocky_ground/scene.gltf"));
+
+    PBRModel chisaModel(FileSystem::getPath("resources/objects/chisa/scene.gltf"));
+
+    shotgunModelPtr = &shotgunModel;
+    boxModelPtr = &boxModel;
+    groundModelPtr = &groundModel;
+    chisaModelPtr = &chisaModel;
 
     // render loop
     // -----------
@@ -485,7 +516,8 @@ int main()
 
         // render
         // ------
-        glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        //glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+        glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         // envmap rotation
@@ -500,6 +532,37 @@ int main()
             //newPos = lightPositions[i];
             pbrShader.setVec3("lightPositions[" + std::to_string(i) + "]", newPos);
         }
+
+        // calculate model position
+        boxModelMat = glm::mat4(1.0f);
+        boxModelMat = glm::translate(boxModelMat, glm::vec3(0.0f, 0.0f, 0.0f));
+        boxModelMat = glm::scale(boxModelMat, glm::vec3(0.01f));
+        boxModelMat = glm::rotate(boxModelMat, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+
+        shotgunModelMat = glm::mat4(1.0f);
+        shotgunModelMat = glm::translate(shotgunModelMat, glm::vec3(0.75f, 0.35f, 0.0f));
+        shotgunModelMat = glm::scale(shotgunModelMat, glm::vec3(1.75f));
+        shotgunModelMat = glm::rotate(shotgunModelMat, glm::radians(-90.0f), glm::vec3(0, 1, 0));
+        shotgunModelMat = glm::rotate(shotgunModelMat, glm::radians(-76.0f), glm::vec3(1, 0, 0));
+
+        groundModelMat = glm::mat4(1.0f);
+        groundModelMat = glm::translate(groundModelMat, glm::vec3(0.0f, -0.2, 0.0f));
+        groundModelMat = glm::scale(groundModelMat, glm::vec3(2.0f, 0.5f, 2.0f));
+        groundModelMat = glm::rotate(groundModelMat, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+
+        goldSphereModelMat = glm::mat4(1.0f);
+        goldSphereModelMat = glm::translate(goldSphereModelMat, glm::vec3(1.5f, 1.0f, -1.0f));
+        goldSphereModelMat2 = glm::scale(goldSphereModelMat, glm::vec3(0.25f));
+
+        goldSphereModelMat2 = glm::mat4(1.0f);
+        goldSphereModelMat2 = glm::translate(goldSphereModelMat2, glm::vec3(-1.5f, 1.0f, -1.0f));
+        goldSphereModelMat2 = glm::scale(goldSphereModelMat2, glm::vec3(0.5f));
+
+        chisaModelMat = glm::mat4(1.0f);
+        chisaModelMat = glm::translate(chisaModelMat, glm::vec3(0.0f, 0.0f, -1.0f));
+        chisaModelMat = glm::scale(chisaModelMat, glm::vec3(0.015f));
+        chisaModelMat = glm::rotate(chisaModelMat, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+
 
         // render scene depth to texture from light source
         // -----------------------------------------------
@@ -517,7 +580,7 @@ int main()
         glViewport(0, 0, SHADOW_WIDTH, SHADOW_HEIGHT);
         glBindFramebuffer(GL_FRAMEBUFFER, depthMapFBO);
         glClear(GL_DEPTH_BUFFER_BIT);
-        renderSceneDepth(depthShader, currentModel, lightPositions[0]);
+        renderSceneDepth(depthShader, lightPositions[0]);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         // reset viewport
         glViewport(0, 0, scrWidth, scrHeight);
@@ -546,22 +609,22 @@ int main()
         pbrShader.setMat4("envMapRotation", envRotMat);
         pbrShader.setMat4("lightSpaceMatrix", lightSpaceMatrix);
 
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.01f));	
-        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-        pbrShader.setMat4("model", model);
-        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-        currentModel.Draw(pbrShader);
+        pbrShader.setMat4("model", boxModelMat);
+        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(boxModelMat))));
+        boxModel.Draw(pbrShader);
 
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::scale(model, glm::vec3(0.01f));
-        model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0, 1, 0));
-        model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-        pbrShader.setMat4("model", model);
-        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
-        currentModel.Draw(pbrShader);
+        pbrShader.setMat4("model", shotgunModelMat);
+        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(shotgunModelMat))));
+        shotgunModel.Draw(pbrShader);
+
+        pbrShader.setMat4("model", chisaModelMat);
+        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(chisaModelMat))));
+        chisaModel.Draw(pbrShader);
+
+        pbrShader.setMat4("model", groundModelMat);
+        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(groundModelMat))));
+        groundModel.Draw(pbrShader);
+
 
         // gold
         glActiveTexture(GL_TEXTURE4);
@@ -574,15 +637,22 @@ int main()
         glBindTexture(GL_TEXTURE_2D, goldRoughnessMap);
         glActiveTexture(GL_TEXTURE8);
         glBindTexture(GL_TEXTURE_2D, goldAOMap);
-
-        model = glm::mat4(1.0f);
-        //model = glm::translate(model, glm::vec3(-3.0, 0.0, 2.0));
-        glm::vec3 pos = lightPositions[0] * 0.5f;
-        model = glm::translate(model, pos);
-        model = glm::scale(model, glm::vec3(2.5f));
-        pbrShader.setMat4("model", model);
-        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+        pbrShader.setMat4("model", goldSphereModelMat);
+        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(goldSphereModelMat))));
         renderSphere();
+
+        pbrShader.setMat4("model", goldSphereModelMat2);
+        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(goldSphereModelMat2))));
+        renderSphere();
+
+        //model = glm::mat4(1.0f);
+        ////model = glm::translate(model, glm::vec3(-3.0, 0.0, 2.0));
+        //glm::vec3 pos = lightPositions[0] * 0.5f;
+        //model = glm::translate(model, pos);
+        //model = glm::scale(model, glm::vec3(2.5f));
+        //pbrShader.setMat4("model", model);
+        //pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
+        //renderSphere();
 
         // render light source (simply re-render sphere at light positions)
         // this looks a bit off as we use the same shader, but it'll make their positions obvious and 
@@ -611,7 +681,7 @@ int main()
             pbrShader.setMat4("model", model);
             pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(model))));
 
-            renderSphere();
+            if (debugLightPosition) renderSphere();
         }
 
         // render skybox (render as last to prevent overdraw)
@@ -626,7 +696,7 @@ int main()
         model = glm::mat4(1.0f);
         model = glm::rotate(model, glm::radians(backgroundRotateAngle), glm::vec3(0.0f, 1.0f, 0.0f));
         backgroundShader.setMat4("model", model);
-        renderCube();
+        if (toggleEnvironmentMap) renderCube();
 
         // shadow map debug quad
         debugDepthQuad.use();
@@ -650,33 +720,61 @@ int main()
     return 0;
 }
 
-void renderSceneDepth(Shader& shader, PBRModel& pbrModel, glm::vec3 oldLightPos) {
-    glm::mat4 model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(0.01f));
-    model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-    shader.setMat4("model", model);
-    pbrModel.Draw(shader);
+void renderSceneDepth(Shader& shader, glm::vec3 oldLightPos) {
+    shader.setMat4("model", boxModelMat);
+    boxModelPtr->Draw(shader);
 
-    model = glm::mat4(1.0f);
-    model = glm::translate(model, glm::vec3(0.0f, 1.0f, 0.0f));
-    model = glm::scale(model, glm::vec3(0.01f));
-    model = glm::rotate(model, glm::radians(90.0f), glm::vec3(0, 1, 0));
-    model = glm::rotate(model, glm::radians(-90.0f), glm::vec3(1, 0, 0));
-    shader.setMat4("model", model);
-    pbrModel.Draw(shader);
+    shader.setMat4("model", shotgunModelMat);
+    shotgunModelPtr->Draw(shader);
 
-    model = glm::mat4(1.0f);
-    //model = glm::translate(model, glm::vec3(-3.0, 0.0, 2.0));
-    glm::vec3 pos = oldLightPos * 0.5f;
-    model = glm::translate(model, pos);
-    model = glm::scale(model, glm::vec3(2.5f));
-    shader.setMat4("model", model);
+    shader.setMat4("model", groundModelMat);
+    groundModelPtr->Draw(shader);
+
+    shader.setMat4("model", goldSphereModelMat);
     renderSphere();
+
+    shader.setMat4("model", goldSphereModelMat2);
+    renderSphere();
+
+    shader.setMat4("model", chisaModelMat);
+    chisaModelPtr->Draw(shader);
+
+    //model = glm::mat4(1.0f);
+    ////model = glm::translate(model, glm::vec3(-3.0, 0.0, 2.0));
+    //glm::vec3 pos = oldLightPos * 0.5f;
+    //model = glm::translate(model, pos);
+    //model = glm::scale(model, glm::vec3(2.5f));
+    //shader.setMat4("model", model);
+    //renderSphere();
 }
 
 // process all input: query GLFW whether relevant keys are pressed/released this frame and react accordingly
 // ---------------------------------------------------------------------------------------------------------
+std::map<unsigned int, bool> keyDownMap;
+bool getKeyDown(GLFWwindow* window, unsigned int key) {
+    // init
+    if (!keyDownMap.contains(key)) {
+        keyDownMap[key] = false;
+        return false;
+    }
+
+    if (glfwGetKey(window, key) == GLFW_PRESS && keyDownMap.at(key)) {
+        return false;
+    }
+
+    if (glfwGetKey(window, key) == GLFW_PRESS && !keyDownMap.at(key)) {
+        keyDownMap[key] = true;
+        return true;
+    }
+
+    if (glfwGetKey(window, key) == GLFW_RELEASE && keyDownMap.at(key)) {
+        keyDownMap[key] = false;
+        return false;
+    }
+
+    return false;
+}
+
 void processInput(GLFWwindow *window)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -688,6 +786,10 @@ void processInput(GLFWwindow *window)
     }
     else {
         canRotatebackgroundFlag &= ~1;
+    }
+
+    if (getKeyDown(window, GLFW_KEY_B)) {
+        toggleEnvironmentMap = !toggleEnvironmentMap;
     }
 
     if (canRotatebackgroundFlag != 3) {

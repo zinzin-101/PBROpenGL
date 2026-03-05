@@ -7,10 +7,20 @@ in vec4 FragPosLightSpace;
 
 // material parameters
 uniform sampler2D albedoMap1;
+uniform sampler2D albedoMap2;
+uniform sampler2D albedoMap3;
 uniform sampler2D normalMap1;
+uniform sampler2D normalMap2;
+uniform sampler2D normalMap3;
 uniform sampler2D metallicMap1;
+uniform sampler2D metallicMap2;
+uniform sampler2D metallicMap3;
 uniform sampler2D roughnessMap1;
+uniform sampler2D roughnessMap2;
+uniform sampler2D roughnessMap3;
 uniform sampler2D aoMap1;
+uniform sampler2D aoMap2;
+uniform sampler2D aoMap3;
 
 // IBL
 uniform samplerCube irradianceMap;
@@ -22,7 +32,7 @@ uniform mat4 envMapRotation;
 uniform sampler2D shadowMap;
 
 // lights
-#define NUM_OF_LIGHTS 1
+#define NUM_OF_LIGHTS 4
 uniform vec3 lightPositions[4];
 uniform vec3 lightColors[4];
 
@@ -228,6 +238,7 @@ void main()
     //float shadow = ShadowCalculation(FragPosLightSpace);
     //color *= (1.0 - shadow);
     FragColor = vec4(color, 1.0);
+    //float shadow = ShadowCalculation(FragPosLightSpace);
     //FragColor = vec4(vec3(shadow), 1.0);
     //FragColor = vec4(vec3(texture(shadowMap, projCoords.xy).r), 1.0);
 }
