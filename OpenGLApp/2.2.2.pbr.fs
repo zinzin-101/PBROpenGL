@@ -127,7 +127,7 @@ float ShadowCalculation(vec4 fragPosLightSpace)
     vec3 normal = normalize(Normal);
     vec3 lightDir = normalize(lightPositions[0] - WorldPos);
 
-    float bias = -max(0.001 * (1.0 - dot(normal, lightDir)), 0.001);
+    float bias = -max(0.0005 * (1.0 - dot(normal, lightDir)), 0.0005);
     //float bias = 0.005 * tan(acos(clamp(dot(normal, lightDir), 0.0, 1.0)));
     //float bias = -0.001; 
     // check whether current frag pos is in shadow
@@ -242,17 +242,16 @@ void main()
     vec3 prefilteredColor = textureLod(prefilterMap, R,  roughness * MAX_REFLECTION_LOD).rgb;    
     vec2 brdf  = texture(brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
     vec3 specular = prefilteredColor * (F * brdf.x + brdf.y);
-
+    
+    vec3 ambient = (kD * diffuse + specular) * ao;
 
     // apply shadow without calculating from light source to prevent incorrect specular from envmap mismatch
     // apply a subtle shadow influence to the ambient term
     if (useDiffuseShadow) {
         float shadow = 1.0 - ShadowCalculation(FragPosLightSpace);
-        float diffuseShadow = mix(0.2, 1.0, shadow);
-        diffuse *= diffuseShadow;
+        //diffuse *= diffuseShadow;
+        ambient *= mix(0.2, 1.0, shadow); 
     }
-
-    vec3 ambient = (kD * diffuse + specular) * ao;
 
     vec3 color = ambient + Lo;
     

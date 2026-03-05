@@ -21,7 +21,7 @@ void main()
     WorldPos = vec3(model * vec4(aPos, 1.0));
     Normal = normalize(normalMatrix * aNormal);
 
-    vec3 fragOffsetPos = WorldPos + Normal * 0.1; 
+    vec3 fragOffsetPos = WorldPos + Normal * 0.075; 
     FragPosLightSpace = lightSpaceMatrix * vec4(fragOffsetPos, 1.0);
 
     gl_Position =  projection * view * vec4(WorldPos, 1.0);
