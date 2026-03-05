@@ -89,6 +89,13 @@ unsigned int wallAOMap;
 
 void renderSceneDepth(Shader& shader, glm::vec3 oldLightPos);
 int PBRMesh::maxTextureNumber = 0;
+
+unsigned int PBRMesh::defaultAlbedo = 0;
+unsigned int PBRMesh::defaultNormal = 0;
+unsigned int PBRMesh::defaultMetallic = 0;
+unsigned int PBRMesh::defaultRoughness = 0;
+unsigned int PBRMesh::defaultAO = 0;
+
 PBRModel* boxModelPtr = nullptr;
 PBRModel* shotgunModelPtr = nullptr;
 PBRModel* groundModelPtr = nullptr;
@@ -145,6 +152,7 @@ int main()
     glEnable(GL_DEPTH_TEST);
     // set depth function to less than AND equal for skybox depth trick.
     glDepthFunc(GL_LEQUAL);
+    //glDepthFunc(GL_LESS);
     // enable seamless cubemap sampling for lower mip levels in the pre-filter map.
     glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
 
@@ -229,10 +237,10 @@ int main()
         //glm::vec3( 10.0f, -10.0f, 10.0f),
     };
     glm::vec3 lightColors[] = {
-        glm::vec3(1000.0f, 1000.0f, 1000.0f),
-        glm::vec3(1000.0f, 1000.0f, 1000.0f),
-        glm::vec3(1000.0f, 1000.0f, 1000.0f),
-        glm::vec3(1000.0f, 1000.0f, 1000.0f)
+        glm::vec3(800.0f, 800.0f, 800.0f),
+        glm::vec3(800.0f, 800.0f, 800.0f),
+        glm::vec3(800.0f, 800.0f, 800.0f),
+        glm::vec3(800.0f, 800.0f, 800.0f)
     };
 
     // pbr: setup framebuffer
@@ -702,8 +710,8 @@ int main()
         debugDepthQuad.use();
         debugDepthQuad.setFloat("near_plane", nearPlane);
         debugDepthQuad.setFloat("far_plane", farPlane);
-        glActiveTexture(GL_TEXTURE3);
-        glBindTexture(GL_TEXTURE_2D, depthMap);
+        //glActiveTexture(GL_TEXTURE3);
+        //glBindTexture(GL_TEXTURE_2D, depthMap);
         //renderQuad();
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)

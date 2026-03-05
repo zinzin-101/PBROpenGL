@@ -49,9 +49,22 @@ public:
 
     static int maxTextureNumber; // for debug purposes
 
+    static unsigned int defaultAlbedo;
+    static unsigned int defaultNormal;
+    static unsigned int defaultMetallic;
+    static unsigned int defaultRoughness;
+    static unsigned int defaultAO;
+
     // constructor
     PBRMesh(vector<Vertex> vertices, vector<unsigned int> indices, vector<Texture> textures)
     {
+        if (defaultAlbedo == 0) defaultAlbedo = CreateDefaultTexture(255, 255, 255);
+        if (defaultNormal == 0) defaultNormal = CreateDefaultTexture(128, 128, 255);
+        if (defaultMetallic == 0) defaultMetallic = CreateDefaultTexture(0, 0, 0);
+        if (defaultRoughness == 0) defaultRoughness = CreateDefaultTexture(255, 255, 255);
+        if (defaultAO == 0) defaultAO = CreateDefaultTexture(255, 255, 255);
+
+        
         this->vertices = vertices;
         this->indices = indices;
         this->textures = textures;
@@ -74,10 +87,24 @@ public:
         unsigned int metallicNrPBR = 1;
         unsigned int roughnessNrPBR = 1;
         unsigned int aoNrPBR = 1;
+
+        // reset all textures
+        for (unsigned int i = 0; i < 5; i++) {
+            unsigned int defaultTex[] = {
+                defaultAlbedo,
+                defaultNormal,
+                defaultMetallic,
+                defaultRoughness,
+                defaultAO
+            };
+
+            glActiveTexture(GL_TEXTURE4 + i); // start at texture 4 since 0-2 are used for IBL data and 3 for shadow map
+            glBindTexture(GL_TEXTURE_2D, defaultTex[i]);
+        }
+
         for (unsigned int i = 0; i < textures.size(); i++)
         {
             glActiveTexture(GL_TEXTURE4 + i); // start at texture 4 since 0-2 are used for IBL data and 3 for shadow map
-            glBindTexture(GL_TEXTURE_2D, 0);
             // retrieve texture number (the N in diffuse_textureN)
             string number;
             string name = textures[i].type;
@@ -120,7 +147,7 @@ public:
                 number = std::to_string(aoNrPBR++);
 
             // now set the sampler to the correct texture unit
-            glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), i);
+            glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), GL_TEXTURE4 + i);
             // and finally bind the texture
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
 
@@ -183,6 +210,31 @@ private:
         glEnableVertexAttribArray(6);
         glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, m_Weights));
         glBindVertexArray(0);
+    }
+
+    unsigned int CreateDefaultTexture(unsigned char r, unsigned char g, unsigned char b)
+    {
+        unsigned int tex;
+        unsigned char data[3] = { r, g, b };
+
+        glGenTextures(1, &tex);
+        glBindTexture(GL_TEXTURE_2D, tex);
+
+        glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RGB,
+            1, 1,
+            0,
+            GL_RGB,
+            GL_UNSIGNED_BYTE,
+            data
+        );
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        return tex;
     }
 };
 #endif

@@ -211,6 +211,10 @@ private:
 
             aiString str;
             mat->GetTexture(type, i, &str);
+
+            std::cout << str.C_Str() << ": " << typeName << std::endl;
+
+
             // check if texture was loaded before and if so, continue to next iteration: skip loading a new texture
             bool skip = false;
             for (unsigned int j = 0; j < textures_loaded.size(); j++)
