@@ -49,7 +49,7 @@ std::string pureSkyEnvMapPath = "resources/textures/hdr/puresky_2k.hdr";
 std::string studioEnvMapPath = "resources/textures/hdr/studio.hdr";
 std::string pisztykEnvMapPath = "resources/textures/hdr/pisztyk.hdr";
 std::string kloppenHeimPureSkyEnvMapPath = "resources/textures/hdr/kloppenheim_puresky.hdr";
-std::string currentEnvMapPath = studioEnvMapPath;
+std::string currentEnvMapPath = pureSkyEnvMapPath;
 
 // background rotation
 float backgroundRotateAngle = 0.0f;
@@ -117,6 +117,7 @@ PBRModel* revolverGunModelPtr = nullptr;
 PBRModel* groundModelPtr = nullptr;
 PBRModel* chisaModelPtr = nullptr;
 PBRModel* scytheModelPtr = nullptr;
+PBRModel* swordModelPtr = nullptr;
 glm::mat4 boxModelMat = glm::mat4(1.0f);
 glm::mat4 shotgunModelMat = glm::mat4(1.0f);
 glm::mat4 revolverGunModelMat = glm::mat4(1.0f);
@@ -125,6 +126,7 @@ glm::mat4 goldSphereModelMat = glm::mat4(1.0f);
 glm::mat4 goldSphereModelMat2 = glm::mat4(1.0f);
 glm::mat4 chisaModelMat = glm::mat4(1.0f);
 glm::mat4 scytheModelMat = glm::mat4(1.0f);
+glm::mat4 swordModelMat = glm::mat4(1.0f);
 
 int main()
 {
@@ -519,6 +521,7 @@ int main()
     PBRModel chisaModel(FileSystem::getPath("resources/objects/chisa/scene.gltf"));
 
     PBRModel scytheModel(FileSystem::getPath("resources/objects/scythe/scene.gltf"));
+    PBRModel swordModel(FileSystem::getPath("resources/objects/sword/scene.gltf"));
 
     shotgunModelPtr = &shotgunModel;
     revolverGunModelPtr = &revolverGunModel;
@@ -526,6 +529,7 @@ int main()
     groundModelPtr = &groundModel;
     chisaModelPtr = &chisaModel;
     scytheModelPtr = &scytheModel;
+    swordModelPtr = &swordModel;
 
     // render loop
     // -----------
@@ -582,7 +586,7 @@ int main()
 
         groundModelMat = glm::mat4(1.0f);
         groundModelMat = glm::translate(groundModelMat, glm::vec3(0.0f, -0.1, 0.0f));
-        groundModelMat = glm::scale(groundModelMat, glm::vec3(1.2f, 0.25f, 1.2f));
+        groundModelMat = glm::scale(groundModelMat, glm::vec3(1.05f, 0.25f, 1.05f));
         groundModelMat = glm::rotate(groundModelMat, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 
         goldSphereModelMat = glm::mat4(1.0f);
@@ -602,6 +606,11 @@ int main()
         scytheModelMat = glm::translate(scytheModelMat, glm::vec3(-1.0f, 0.5f, 0.0f));
         scytheModelMat  = glm::scale(scytheModelMat, glm::vec3(0.0075));
         scytheModelMat = glm::rotate(scytheModelMat, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+
+        swordModelMat = glm::mat4(1.0f);
+        swordModelMat = glm::translate(swordModelMat, glm::vec3(1.0f, 0.5f, 0.0f));
+        swordModelMat = glm::scale(swordModelMat, glm::vec3(0.08));
+        swordModelMat = glm::rotate(swordModelMat, glm::radians(-90.0f), glm::vec3(0, 1, 0));
 
         // render scene depth to texture from light source
         // -----------------------------------------------
@@ -679,6 +688,10 @@ int main()
         pbrShader.setMat4("model", scytheModelMat);
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(scytheModelMat))));
         scytheModel.Draw(pbrShader);
+
+        pbrShader.setMat4("model", swordModelMat);
+        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(swordModelMat))));
+        swordModel.Draw(pbrShader);
 
         // gold
         glActiveTexture(GL_TEXTURE4);
@@ -798,6 +811,9 @@ void renderSceneDepth(Shader& shader, glm::vec3 oldLightPos) {
 
     shader.setMat4("model", scytheModelMat);
     scytheModelPtr->Draw(shader);
+
+    shader.setMat4("model", swordModelMat);
+    swordModelPtr->Draw(shader);
 
     //model = glm::mat4(1.0f);
     ////model = glm::translate(model, glm::vec3(-3.0, 0.0, 2.0));
