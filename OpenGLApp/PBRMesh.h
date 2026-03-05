@@ -148,6 +148,7 @@ public:
 
             // now set the sampler to the correct texture unit
             glUniform1i(glGetUniformLocation(shader.ID, (name + number).c_str()), GL_TEXTURE4 + i);
+            glUniform1i(glGetUniformLocation(shader.ID, "useMR"), (metallicNrPBR != 1 && roughnessNrPBR == 1) ? 1 : 0);
             // and finally bind the texture
             glBindTexture(GL_TEXTURE_2D, textures[i].id);
 

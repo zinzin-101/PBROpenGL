@@ -48,7 +48,8 @@ unsigned int canRotatebackgroundFlag = 0; // can rotate if first 2 bits are 1 | 
 float rotateSensitivity = 15.0f; // in degrees
 bool toggleEnvironmentMap = true;
 
-bool debugLightPosition = false;
+bool debugLightPosition = true;
+bool debugShadowQuad = false;
 
 // PBR material textures
 // --------------------------
@@ -98,10 +99,12 @@ unsigned int PBRMesh::defaultAO = 0;
 
 PBRModel* boxModelPtr = nullptr;
 PBRModel* shotgunModelPtr = nullptr;
+PBRModel* revolverGunModelPtr = nullptr;
 PBRModel* groundModelPtr = nullptr;
 PBRModel* chisaModelPtr = nullptr;
 glm::mat4 boxModelMat = glm::mat4(1.0f);
 glm::mat4 shotgunModelMat = glm::mat4(1.0f);
+glm::mat4 revolverGunModelMat = glm::mat4(1.0f);
 glm::mat4 groundModelMat = glm::mat4(1.0f);
 glm::mat4 goldSphereModelMat = glm::mat4(1.0f);
 glm::mat4 goldSphereModelMat2 = glm::mat4(1.0f);
@@ -227,20 +230,21 @@ int main()
     // ------
     const int numOfLights = 4;
     glm::vec3 lightPositions[] = {
-        glm::vec3(12.5f,  2.5f, 10.0f), // the first one is used for directional light
-        glm::vec3(12.5f,  2.5f, 10.0f),
-        glm::vec3(12.5f,  2.5f, 10.0f),
-        glm::vec3(12.5f,  2.5f, 10.0f),
+        //glm::vec3(12.5f,  2.5f, 10.0f), // the first one is used for directional light
+        glm::vec3(5.0f,  2.5f, 4.0f),
+        glm::vec3(5.0f,  2.5f, 4.0f),
+        glm::vec3(5.0f,  2.5f, 4.0f),
+        glm::vec3(5.0f,  2.5f, 4.0f),
         //glm::vec3(0.0f,  10.0f, 0.0f),
         //glm::vec3( 10.0f,  10.0f, 10.0f),
         //glm::vec3(-10.0f, -10.0f, 10.0f),
         //glm::vec3( 10.0f, -10.0f, 10.0f),
     };
     glm::vec3 lightColors[] = {
-        glm::vec3(800.0f, 800.0f, 800.0f),
-        glm::vec3(800.0f, 800.0f, 800.0f),
-        glm::vec3(800.0f, 800.0f, 800.0f),
-        glm::vec3(800.0f, 800.0f, 800.0f)
+        glm::vec3(100.0f, 100.0f, 100.0f),
+        glm::vec3(100.0f, 100.0f, 100.0f),
+        glm::vec3(100.0f, 100.0f, 100.0f),
+        glm::vec3(100.0f, 100.0f, 100.0f)
     };
 
     // pbr: setup framebuffer
@@ -261,9 +265,9 @@ int main()
     int width, height, nrComponents;
     //float *data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/newport_loft.hdr").c_str(), &width, &height, &nrComponents, 0);
     //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/morning_2k.hdr").c_str(), &width, &height, &nrComponents, 0);
-    //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/puresky_2k.hdr").c_str(), &width, &height, &nrComponents, 0);
+    float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/puresky_2k.hdr").c_str(), &width, &height, &nrComponents, 0);
     //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/studio.hdr").c_str(), &width, &height, &nrComponents, 0);
-    float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/pisztyk.hdr").c_str(), &width, &height, &nrComponents, 0);
+    //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/pisztyk.hdr").c_str(), &width, &height, &nrComponents, 0);
     //float* data = stbi_loadf(FileSystem::getPath("resources/textures/hdr/kloppenheim_puresky.hdr").c_str(), &width, &height, &nrComponents, 0);
 
     unsigned int hdrTexture;
@@ -494,6 +498,7 @@ int main()
     //PBRModel currentModel(FileSystem::getPath("resources/objects/wooden_chest/scene.gltf"));
     //PBRModel currentModel(FileSystem::getPath("resources/objects/chisa/scene.gltf"));
     PBRModel shotgunModel(FileSystem::getPath("resources/objects/shotgun/scene.gltf"));
+    PBRModel revolverGunModel(FileSystem::getPath("resources/objects/revolvergun/scene.gltf"));
     PBRModel boxModel(FileSystem::getPath("resources/objects/military_box/scene.gltf"));
     //PBRModel currentModel(FileSystem::getPath("resources/objects/wheel/wheel.glb"));
 
@@ -503,6 +508,7 @@ int main()
     PBRModel chisaModel(FileSystem::getPath("resources/objects/chisa/scene.gltf"));
 
     shotgunModelPtr = &shotgunModel;
+    revolverGunModelPtr = &revolverGunModel;
     boxModelPtr = &boxModel;
     groundModelPtr = &groundModel;
     chisaModelPtr = &chisaModel;
@@ -553,6 +559,11 @@ int main()
         shotgunModelMat = glm::rotate(shotgunModelMat, glm::radians(-90.0f), glm::vec3(0, 1, 0));
         shotgunModelMat = glm::rotate(shotgunModelMat, glm::radians(-76.0f), glm::vec3(1, 0, 0));
 
+        revolverGunModelMat = glm::mat4(1.0f);
+        revolverGunModelMat = glm::translate(revolverGunModelMat, glm::vec3(0.0f, 1.0f, 0.0f));
+        revolverGunModelMat = glm::scale(revolverGunModelMat, glm::vec3(1.f));
+        revolverGunModelMat = glm::rotate(revolverGunModelMat, glm::radians(-90.0f), glm::vec3(1, 0, 0));
+
         groundModelMat = glm::mat4(1.0f);
         groundModelMat = glm::translate(groundModelMat, glm::vec3(0.0f, -0.2, 0.0f));
         groundModelMat = glm::scale(groundModelMat, glm::vec3(2.0f, 0.5f, 2.0f));
@@ -567,7 +578,7 @@ int main()
         goldSphereModelMat2 = glm::scale(goldSphereModelMat2, glm::vec3(0.5f));
 
         chisaModelMat = glm::mat4(1.0f);
-        chisaModelMat = glm::translate(chisaModelMat, glm::vec3(0.0f, 0.0f, -1.0f));
+        chisaModelMat = glm::translate(chisaModelMat, glm::vec3(0.0f, -0.2f, -1.0f));
         chisaModelMat = glm::scale(chisaModelMat, glm::vec3(0.015f));
         chisaModelMat = glm::rotate(chisaModelMat, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 
@@ -577,8 +588,8 @@ int main()
         glm::mat4 lightProjection;
         glm::mat4 lightView;
         glm::mat4 lightSpaceMatrix;
-        float nearPlane = 0.1f;
-        float farPlane = 30.0f;
+        float nearPlane = 2.0f;
+        float farPlane = 15.0f;
         lightProjection = glm::ortho(-10.0f, 10.0f, -10.0f, 10.0f, nearPlane, farPlane);
         glm::vec3 lightPos = glm::vec3(invEnvRotMat * glm::vec4(lightPositions[0], 1.0f));
         lightView = glm::lookAt(lightPos, glm::vec3(0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
@@ -624,6 +635,10 @@ int main()
         pbrShader.setMat4("model", shotgunModelMat);
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(shotgunModelMat))));
         shotgunModel.Draw(pbrShader);
+
+        pbrShader.setMat4("model", revolverGunModelMat);
+        pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(revolverGunModelMat))));
+        revolverGunModel.Draw(pbrShader);
 
         pbrShader.setMat4("model", chisaModelMat);
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(chisaModelMat))));
@@ -710,9 +725,9 @@ int main()
         debugDepthQuad.use();
         debugDepthQuad.setFloat("near_plane", nearPlane);
         debugDepthQuad.setFloat("far_plane", farPlane);
-        //glActiveTexture(GL_TEXTURE3);
-        //glBindTexture(GL_TEXTURE_2D, depthMap);
-        //renderQuad();
+        glActiveTexture(GL_TEXTURE3);
+        glBindTexture(GL_TEXTURE_2D, depthMap);
+        if (debugShadowQuad) renderQuad();
 
         // glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
         // -------------------------------------------------------------------------------
@@ -734,6 +749,9 @@ void renderSceneDepth(Shader& shader, glm::vec3 oldLightPos) {
 
     shader.setMat4("model", shotgunModelMat);
     shotgunModelPtr->Draw(shader);
+
+    shader.setMat4("model", revolverGunModelMat);
+    revolverGunModelPtr->Draw(shader);
 
     shader.setMat4("model", groundModelMat);
     groundModelPtr->Draw(shader);

@@ -22,6 +22,8 @@ uniform sampler2D aoMap1;
 uniform sampler2D aoMap2;
 uniform sampler2D aoMap3;
 
+uniform bool useMR;
+
 // IBL
 uniform samplerCube irradianceMap;
 uniform samplerCube prefilterMap;
@@ -150,7 +152,7 @@ void main()
     // material properties
     vec3 albedo = pow(texture(albedoMap1, TexCoords).rgb, vec3(2.2));
     float metallic = texture(metallicMap1, TexCoords).r;
-    float roughness = texture(roughnessMap1, TexCoords).r;
+    float roughness = useMR ? texture(roughnessMap1, TexCoords).g : texture(roughnessMap1, TexCoords).r;
     float ao = texture(aoMap1, TexCoords).r;
        
     // input lighting data
@@ -238,7 +240,8 @@ void main()
     //float shadow = ShadowCalculation(FragPosLightSpace);
     //color *= (1.0 - shadow);
     FragColor = vec4(color, 1.0);
-    //float shadow = ShadowCalculation(FragPosLightSpace);
+    //FragColor = vec4(vec3(ShadowCalculation(FragPosLightSpace)),1.0);
+    //float shadow = 1.0 - ShadowCalculation(FragPosLightSpace);
     //FragColor = vec4(vec3(shadow), 1.0);
     //FragColor = vec4(vec3(texture(shadowMap, projCoords.xy).r), 1.0);
 }

@@ -19,7 +19,7 @@ void main()
 {
     TexCoords = aTexCoords;
     WorldPos = vec3(model * vec4(aPos, 1.0));
-    Normal = normalMatrix * aNormal;
+    Normal = normalize(normalMatrix * aNormal);
 
     FragPosLightSpace = lightSpaceMatrix * vec4(WorldPos, 1.0);
 
