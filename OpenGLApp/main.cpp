@@ -49,7 +49,7 @@ std::string pureSkyEnvMapPath = "resources/textures/hdr/puresky_2k.hdr";
 std::string studioEnvMapPath = "resources/textures/hdr/studio.hdr";
 std::string pisztykEnvMapPath = "resources/textures/hdr/pisztyk.hdr";
 std::string kloppenHeimPureSkyEnvMapPath = "resources/textures/hdr/kloppenheim_puresky.hdr";
-std::string currentEnvMapPath = pureSkyEnvMapPath;
+std::string currentEnvMapPath = morningSkyEnvMapPath;
 
 // background rotation
 float backgroundRotateAngle = 0.0f;
@@ -608,8 +608,8 @@ int main()
         scytheModelMat = glm::rotate(scytheModelMat, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 
         swordModelMat = glm::mat4(1.0f);
-        swordModelMat = glm::translate(swordModelMat, glm::vec3(1.0f, 0.5f, 0.0f));
-        swordModelMat = glm::scale(swordModelMat, glm::vec3(0.08));
+        swordModelMat = glm::translate(swordModelMat, glm::vec3(1.0f, 0.4f, 0.0f));
+        swordModelMat = glm::scale(swordModelMat, glm::vec3(0.065));
         swordModelMat = glm::rotate(swordModelMat, glm::radians(-90.0f), glm::vec3(0, 1, 0));
 
         // render scene depth to texture from light source
