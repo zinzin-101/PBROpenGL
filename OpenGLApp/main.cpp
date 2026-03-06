@@ -27,13 +27,15 @@ void renderCube();
 void renderQuad();
 
 // settings
-const unsigned int SCR_WIDTH = 1280;
-const unsigned int SCR_HEIGHT = 720;
+const unsigned int SCR_WIDTH = 1600;
+const unsigned int SCR_HEIGHT = 900;
+//const unsigned int SCR_WIDTH = 1920;
+//const unsigned int SCR_HEIGHT = 1080;
 
 // camera
 Camera camera(glm::vec3(0.0f, 0.0f, 2.0f));
-float lastX = 800.0f / 2.0;
-float lastY = 600.0 / 2.0;
+float lastX = SCR_WIDTH / 2.0;
+float lastY = SCR_HEIGHT / 2.0;
 bool firstMouse = true;
 float normalMoveSpeed = 1.25f;
 float fastMoveSpeed = 5.0f;
@@ -49,12 +51,13 @@ std::string pureSkyEnvMapPath = "resources/textures/hdr/puresky_2k.hdr";
 std::string studioEnvMapPath = "resources/textures/hdr/studio.hdr";
 std::string pisztykEnvMapPath = "resources/textures/hdr/pisztyk.hdr";
 std::string kloppenHeimPureSkyEnvMapPath = "resources/textures/hdr/kloppenheim_puresky.hdr";
-std::string currentEnvMapPath = morningSkyEnvMapPath;
+std::string currentEnvMapPath = pisztykEnvMapPath;
 
 // background rotation
 float backgroundRotateAngle = 0.0f;
 unsigned int canRotatebackgroundFlag = 0; // can rotate if first 2 bits are 1 | first bit = left alt, second bit = left click
-float rotateSensitivity = 15.0f; // in degrees
+//float rotateSensitivity = 15.0f; // in degrees
+float rotateSensitivity = 60.0f; // in degrees
 bool toggleEnvironmentMap = true;
 
 bool debugLightPosition = false;
@@ -144,7 +147,9 @@ int main()
 
     // glfw window creation
     // --------------------
+    GLFWmonitor* primaryMonitor = glfwGetPrimaryMonitor();
     GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "PBROpenGL", NULL, NULL);
+    //GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "PBROpenGL", primaryMonitor, NULL);
     glfwMakeContextCurrent(window);
     if (window == NULL)
     {
@@ -695,6 +700,7 @@ int main()
         swordModel.Draw(pbrShader);
 
         // gold
+        pbrShader.setBool("useDiffuseShadow", false);
         glActiveTexture(GL_TEXTURE4);
         glBindTexture(GL_TEXTURE_2D, goldAlbedoMap);
         glActiveTexture(GL_TEXTURE5);
@@ -712,7 +718,7 @@ int main()
         pbrShader.setMat4("model", goldSphereModelMat2);
         pbrShader.setMat3("normalMatrix", glm::transpose(glm::inverse(glm::mat3(goldSphereModelMat2))));
         renderSphere();
-
+        pbrShader.setBool("useDiffuseShadow", true);
         //model = glm::mat4(1.0f);
         ////model = glm::translate(model, glm::vec3(-3.0, 0.0, 2.0));
         //glm::vec3 pos = lightPositions[0] * 0.5f;
