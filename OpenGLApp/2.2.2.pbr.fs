@@ -243,17 +243,25 @@ void main()
     vec2 brdf  = texture(brdfLUT, vec2(max(dot(N, V), 0.0), roughness)).rg;
     vec3 specular = prefilteredColor * (F * brdf.x + brdf.y);
     
-    vec3 ambient = (kD * diffuse + specular) * ao;
+    vec3 ambientDiffuse = kD * diffuse * ao;
+    vec3 ambientSpecular = specular * ao;
+
+    vec3 lightDir = normalize(lightPositions[0] - WorldPos);
+    float dotNL = dot(Normal, lightDir); 
 
     // apply shadow without calculating from light source to prevent incorrect specular from envmap mismatch
     // apply a subtle shadow influence to the ambient term
-    if (useDiffuseShadow) {
+    if (useDiffuseShadow && dotNL > 0.0) {
         float shadow = 1.0 - ShadowCalculation(FragPosLightSpace);
-        //diffuse *= diffuseShadow;
-        ambient *= mix(0.2, 1.0, shadow); 
+        //diffuse *= mix(0.2, 1.0, shadow);
+        float shadowFactor = mix(0.2, 1.0, shadow);
+        ambientDiffuse *= shadowFactor; 
+        ambientSpecular *= shadowFactor;
     }
 
-    vec3 color = ambient + Lo;
+    //vec3 ambient = (kD * diffuse + specular) * ao;
+
+    vec3 color = ambientDiffuse + ambientSpecular + Lo;
     
     // HDR tonemapping
     color = color / (color + vec3(1.0));
@@ -286,4 +294,5 @@ void main()
     //float linearDepth = (2.0 * near * far) / (far + near - z * (far - near));
     //FragColor = vec4(vec3(linearDepth / far), 1.0);
     //FragColor = vec4(vec3(depth), 1.0);
+    //FragColor = vec4(vec3(ShadowCalculation(FragPosLightSpace)), 1.0);
 }
